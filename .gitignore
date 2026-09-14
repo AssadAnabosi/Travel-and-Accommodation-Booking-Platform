@@ -1,0 +1,77 @@
+## .NET / C# build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+## Rider / JetBrains
+.idea/
+*.sln.iml
+
+## Visual Studio (in case you sometimes open it there too)
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+## NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Test / coverage results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+## Publish / deployment
+publish/
+*.pubxml
+*.publishproj
+*.azurePubxml
+*.Publish.xml
+
+## ASP.NET Core
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+wwwroot/dist/
+
+## Rider crash reports / caches
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/shelf/
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Environment / secrets
+*.env
+.env.local
+secrets.json
