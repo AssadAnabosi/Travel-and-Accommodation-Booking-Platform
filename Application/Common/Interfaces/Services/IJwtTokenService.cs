@@ -4,5 +4,7 @@ namespace Application.Common.Interfaces.Services;
 
 public interface IJwtTokenService
 {
-    string GenerateToken(User user);
+    string GenerateAccessToken(User user);
+    string GenerateRefreshToken(); // opaque random string, not a JWT
+    DateTime GetRefreshTokenExpiry();
 }
