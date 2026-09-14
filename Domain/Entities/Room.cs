@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -22,7 +23,9 @@ public class Room : AuditableEntity<int>
     private readonly List<Discount> _discounts = new();
     public IReadOnlyCollection<Discount> Discounts => _discounts.AsReadOnly();
 
-    protected Room() { } // EF Core
+    protected Room()
+    {
+    } // EF Core
 
     private Room(int hotelId, string number, RoomType roomType, int adultCapacity, int childCapacity, Money basePrice)
     {
@@ -37,7 +40,8 @@ public class Room : AuditableEntity<int>
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static Room Create(int hotelId, string number, RoomType roomType, int adultCapacity, int childCapacity, Money basePrice) =>
+    public static Room Create(int hotelId, string number, RoomType roomType, int adultCapacity, int childCapacity,
+        Money basePrice) =>
         new(hotelId, number, roomType, adultCapacity, childCapacity, basePrice);
 
     public void Update(string number, int adultCapacity, int childCapacity)
@@ -67,5 +71,15 @@ public class Room : AuditableEntity<int>
     {
         var activeDiscount = _discounts.FirstOrDefault(d => d.IsActiveOn(onDate));
         return activeDiscount is null ? BasePrice : activeDiscount.ApplyTo(BasePrice);
+    }
+
+    public RoomAvailability Reserve(DateRange range, Guid bookingId)
+    {
+        if (!IsAvailableFor(range))
+            throw new RoomNotAvailableException(Id, range);
+
+        var availability = RoomAvailability.ForBooking(Id, range, bookingId);
+        _availabilities.Add(availability);
+        return availability;
     }
 }
