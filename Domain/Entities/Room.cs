@@ -82,4 +82,26 @@ public class Room : AuditableEntity<int>
         _availabilities.Add(availability);
         return availability;
     }
+
+    public RoomAvailability Block(DateRange range)
+    {
+        if (!IsAvailableFor(range))
+            throw new RoomNotAvailableException(Id, range);
+
+        var availability = RoomAvailability.ForBlock(Id, range);
+        _availabilities.Add(availability);
+        return availability;
+    }
+
+    public RoomAvailability? FindAvailability(int availabilityId) =>
+        _availabilities.FirstOrDefault(a => a.Id == availabilityId);
+
+    public void Unblock(RoomAvailability availability)
+    {
+        if (availability.Status != AvailabilityStatus.Blocked)
+            throw new InvalidOperationException(
+                "Only a manually blocked range can be unblocked directly — bookings must be cancelled instead.");
+
+        _availabilities.Remove(availability);
+    }
 }
