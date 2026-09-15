@@ -121,4 +121,13 @@ public class Hotel : AuditableEntity<int>
         RejectionReason = null;
         ModifiedAt = DateTime.UtcNow;
     }
+
+    public void SetAmenities(IEnumerable<int> amenityIds)
+    {
+        _hotelAmenities.Clear();
+        foreach (var amenityId in amenityIds.Distinct())
+            _hotelAmenities.Add(HotelAmenity.Create(Id, amenityId));
+
+        ModifiedAt = DateTime.UtcNow;
+    }
 }
