@@ -9,4 +9,10 @@ public interface IBookingRepository : IRepository<Booking, Guid>
 
     Task<PaginatedList<Booking>> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// True if the user has at least one CheckedOut booking for a room belonging to this hotel.
+    /// </summary>
+    Task<bool> HasCompletedStayAsync(Guid userId, int hotelId, CancellationToken cancellationToken = default);
+
 }
