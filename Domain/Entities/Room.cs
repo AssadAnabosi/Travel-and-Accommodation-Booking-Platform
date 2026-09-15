@@ -44,9 +44,8 @@ public class Room : AuditableEntity<int>
         Money basePrice) =>
         new(hotelId, number, roomType, adultCapacity, childCapacity, basePrice);
 
-    public void Update(string number, int adultCapacity, int childCapacity)
+    public void Update(int adultCapacity, int childCapacity)
     {
-        Number = Guard.AgainstNullOrWhiteSpace(number, nameof(number));
         AdultCapacity = Guard.AgainstNegativeOrZero(adultCapacity, nameof(adultCapacity));
         ChildCapacity = childCapacity < 0
             ? throw new ArgumentOutOfRangeException(nameof(childCapacity))
