@@ -16,6 +16,9 @@ public class UpdateHotelCommandValidator : AbstractValidator<UpdateHotelCommand>
         RuleFor(x => x.StarRating).InclusiveBetween(1, 5);
         RuleFor(x => x.Description).MaximumLength(4000);
         RuleFor(x => x.CityId).MustAsync(CityExists).WithMessage("The specified city does not exist.");
+        RuleFor(x => x.Address).NotEmpty().MaximumLength(300);
+        RuleFor(x => x.Latitude).InclusiveBetween(-90, 90);
+        RuleFor(x => x.Longitude).InclusiveBetween(-180, 180);
     }
 
     private async Task<bool> CityExists(int cityId, CancellationToken cancellationToken)

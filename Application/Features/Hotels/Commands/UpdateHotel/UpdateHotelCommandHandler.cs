@@ -27,7 +27,8 @@ public class UpdateHotelCommandHandler(
 
         var wasRejected = hotel.ApprovalStatus == HotelApprovalStatus.Rejected;
 
-        hotel.Update(request.Name, request.StarRating, request.Description, request.CityId);
+        hotel.Update(request.Name, request.StarRating, request.Description, request.Address, request.Latitude,
+            request.Longitude, request.CityId);
 
         // Owner editing a rejected listing re-enters the review queue automatically.
         // Admin edits don't trigger this — an Admin can just Approve directly if needed.
@@ -40,7 +41,8 @@ public class UpdateHotelCommandHandler(
         var city = await cityRepository.GetByIdAsync(hotel.CityId, cancellationToken);
         var owner = await userRepository.GetByIdAsync(hotel.OwnerId, cancellationToken);
 
-        return new HotelDto(hotel.Id, hotel.Name, hotel.StarRating, hotel.Description, hotel.CityId, city!.Name,
+        return new HotelDto(hotel.Id, hotel.Name, hotel.StarRating, hotel.Description, hotel.Address, hotel.Latitude,
+            hotel.Longitude, hotel.CityId, city!.Name,
             hotel.OwnerId, $"{owner!.FirstName} {owner.LastName}", hotel.ApprovalStatus.ToString(),
             hotel.RejectionReason,
             hotel.Rooms.Count, hotel.CreatedAt, hotel.ModifiedAt);

@@ -4,7 +4,13 @@ using MediatR;
 
 namespace Application.Features.Hotels.Commands.CreateHotel;
 
-// OwnerId is only meaningful when the caller is Admin — ignored/rejected otherwise (see validator).
 [Authorize(Roles = "Admin,HotelOwner")]
-public record CreateHotelCommand(string Name, int StarRating, string Description, int CityId, Guid? OwnerId)
-    : IRequest<HotelDto>;
+public record CreateHotelCommand(
+    string Name,
+    int StarRating,
+    string Description,
+    string Address,
+    double Latitude,
+    double Longitude,
+    int CityId,
+    Guid? OwnerId) : IRequest<HotelDto>;

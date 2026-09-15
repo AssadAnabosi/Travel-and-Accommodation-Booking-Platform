@@ -18,7 +18,8 @@ public class GetHotelByIdQueryHandler(IHotelRepository hotelRepository, ICurrent
         if (!currentUserService.IsInRole("Admin") && hotel.OwnerId != currentUserService.UserId)
             throw new ForbiddenAccessException("You can only view your own hotel.");
 
-        return new HotelDto(hotel.Id, hotel.Name, hotel.StarRating, hotel.Description, hotel.CityId, hotel.City.Name,
+        return new HotelDto(hotel.Id, hotel.Name, hotel.StarRating, hotel.Description, hotel.Address, hotel.Latitude,
+            hotel.Longitude, hotel.CityId, hotel.City.Name,
             hotel.OwnerId, $"{hotel.Owner.FirstName} {hotel.Owner.LastName}",
             hotel.ApprovalStatus.ToString(), hotel.RejectionReason, hotel.Rooms.Count, hotel.CreatedAt,
             hotel.ModifiedAt);

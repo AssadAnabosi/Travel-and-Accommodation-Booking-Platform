@@ -23,6 +23,9 @@ public class Room : AuditableEntity<int>
     private readonly List<Discount> _discounts = new();
     public IReadOnlyCollection<Discount> Discounts => _discounts.AsReadOnly();
 
+    private readonly List<RoomImage> _images = new();
+    public IReadOnlyCollection<RoomImage> Images => _images.AsReadOnly();
+
     protected Room()
     {
     } // EF Core
@@ -102,5 +105,20 @@ public class Room : AuditableEntity<int>
                 "Only a manually blocked range can be unblocked directly — bookings must be cancelled instead.");
 
         _availabilities.Remove(availability);
+    }
+
+    public RoomImage AddImage(string url)
+    {
+        var nextOrder = _images.Count == 0 ? 0 : _images.Max(i => i.DisplayOrder) + 1;
+        var image = RoomImage.Create(Id, url, nextOrder);
+        _images.Add(image);
+        return image;
+    }
+
+    public void RemoveImage(int imageId)
+    {
+        var image = _images.FirstOrDefault(i => i.Id == imageId)
+                    ?? throw new InvalidOperationException($"Image {imageId} does not belong to this room.");
+        _images.Remove(image);
     }
 }
