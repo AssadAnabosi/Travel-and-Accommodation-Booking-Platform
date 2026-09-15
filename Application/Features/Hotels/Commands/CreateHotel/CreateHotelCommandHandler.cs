@@ -20,9 +20,10 @@ public class CreateHotelCommandHandler(
         var callerId = currentUserService.UserId!.Value;
 
         var hotel = isAdmin
-            ? Hotel.CreateByAdmin(request.Name, request.StarRating, request.Description, request.CityId,
-                request.OwnerId!.Value)
-            : Hotel.CreateByOwner(request.Name, request.StarRating, request.Description, request.CityId, callerId);
+            ? Hotel.CreateByAdmin(request.Name, request.StarRating, request.Description, request.Address,
+                request.Latitude, request.Longitude, request.CityId, request.OwnerId!.Value)
+            : Hotel.CreateByOwner(request.Name, request.StarRating, request.Description, request.Address,
+                request.Latitude, request.Longitude, request.CityId, callerId);
 
         await hotelRepository.AddAsync(hotel, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -30,7 +31,8 @@ public class CreateHotelCommandHandler(
         var city = await cityRepository.GetByIdAsync(hotel.CityId, cancellationToken);
         var owner = await userRepository.GetByIdAsync(hotel.OwnerId, cancellationToken);
 
-        return new HotelDto(hotel.Id, hotel.Name, hotel.StarRating, hotel.Description, hotel.CityId, city!.Name,
+        return new HotelDto(hotel.Id, hotel.Name, hotel.StarRating, hotel.Description, hotel.Address, hotel.Latitude,
+            hotel.Longitude, hotel.CityId, city!.Name,
             hotel.OwnerId, $"{owner!.FirstName} {owner.LastName}", hotel.ApprovalStatus.ToString(),
             hotel.RejectionReason,
             RoomsCount: 0, hotel.CreatedAt, hotel.ModifiedAt);

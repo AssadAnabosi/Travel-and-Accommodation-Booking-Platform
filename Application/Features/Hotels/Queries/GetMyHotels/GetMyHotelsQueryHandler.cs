@@ -16,7 +16,8 @@ public class GetMyHotelsQueryHandler(IHotelRepository hotelRepository, ICurrentU
             await hotelRepository.GetByOwnerIdAsync(ownerId, request.PageNumber, request.PageSize, cancellationToken);
 
         var items = result.Items.Select(h => new HotelDto(
-            h.Id, h.Name, h.StarRating, h.Description, h.CityId, h.City.Name,
+            h.Id, h.Name, h.StarRating, h.Description, h.Address, h.Latitude, h.Longitude, h.CityId,
+            h.City.Name,
             h.OwnerId, $"{h.Owner.FirstName} {h.Owner.LastName}",
             h.ApprovalStatus.ToString(), h.RejectionReason, h.Rooms.Count, h.CreatedAt, h.ModifiedAt)).ToList();
 
