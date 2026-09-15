@@ -18,7 +18,9 @@ public class Discount : AuditableEntity<int>
     public DateOnly EndDate { get; private set; }
     public bool IsActive { get; private set; } = true;
 
-    protected Discount() { } // EF Core
+    protected Discount()
+    {
+    } // EF Core
 
     private Discount(int roomId, string name, DiscountType type, decimal value, DateOnly startDate, DateOnly endDate)
     {
@@ -35,7 +37,8 @@ public class Discount : AuditableEntity<int>
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static Discount Create(int roomId, string name, DiscountType type, decimal value, DateOnly startDate, DateOnly endDate) =>
+    public static Discount Create(int roomId, string name, DiscountType type, decimal value, DateOnly startDate,
+        DateOnly endDate) =>
         new(roomId, name, type, value, startDate, endDate);
 
     public bool IsActiveOn(DateOnly date) =>
@@ -61,5 +64,19 @@ public class Discount : AuditableEntity<int>
         if (type == DiscountType.Percentage && value > 100)
             throw new InvalidDiscountException("Percentage discount cannot exceed 100.");
         return value;
+    }
+
+    public void Update(string name, DiscountType type, decimal value, DateOnly startDate, DateOnly endDate)
+    {
+        Name = Guard.AgainstNullOrWhiteSpace(name, nameof(name));
+        Type = type;
+        Value = ValidateValue(type, value);
+
+        if (endDate <= startDate)
+            throw new InvalidDateRangeException("Discount end date must be after the start date.");
+
+        StartDate = startDate;
+        EndDate = endDate;
+        ModifiedAt = DateTime.UtcNow;
     }
 }
