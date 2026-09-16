@@ -18,4 +18,8 @@ public interface IRoomRepository : IRepository<Room, int>
         CancellationToken cancellationToken = default);
 
     Task<bool> HasFutureBookingsAsync(int roomId, DateOnly asOfDate, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Any booking ever, past or future — this is now the deletion criterion, not just upcoming ones.
+    /// </summary>
+    Task<bool> HasAnyBookingsAsync(int roomId, CancellationToken cancellationToken = default);
 }
