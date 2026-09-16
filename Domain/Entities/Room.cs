@@ -121,4 +121,19 @@ public class Room : AuditableEntity<int>
                     ?? throw new InvalidOperationException($"Image {imageId} does not belong to this room.");
         _images.Remove(image);
     }
+
+    /// <summary>
+    /// Frees the original number for reuse by a genuinely new room, while the mangled
+    /// value keeps this row uniquely identifiable in historical Booking/Discount records.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
+    public void MarkDeleted()
+    {
+        if (!IsActive)
+            throw new InvalidOperationException("Room is already inactive.");
+
+        IsActive = false;
+        Number = $"{Number}::deleted::{Guid.NewGuid():N}";
+        ModifiedAt = DateTime.UtcNow;
+    }
 }

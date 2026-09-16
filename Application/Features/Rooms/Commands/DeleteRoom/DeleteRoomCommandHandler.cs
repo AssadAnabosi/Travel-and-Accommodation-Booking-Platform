@@ -9,8 +9,7 @@ namespace Application.Features.Rooms.Commands.DeleteRoom;
 public class DeleteRoomCommandHandler(
     IRoomRepository roomRepository,
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUserService,
-    IDateTimeProvider dateTimeProvider)
+    ICurrentUserService currentUserService)
     : IRequestHandler<DeleteRoomCommand>
 {
     public async Task Handle(DeleteRoomCommand request, CancellationToken cancellationToken)
@@ -21,8 +20,17 @@ public class DeleteRoomCommandHandler(
         if (!currentUserService.IsInRole("Admin") && room.Hotel.OwnerId != currentUserService.UserId)
             throw new ForbiddenAccessException("You can only delete rooms for your own hotel.");
 
-        if (await roomRepository.HasFutureBookingsAsync(room.Id, dateTimeProvider.Today, cancellationToken))
-            throw new ConflictException("Cannot delete a room with current or upcoming bookings.");
+        var hasHistory = await roomRepository.HasAnyBookingsAsync(room.Id, cancellationToken);
+
+        if (hasHistory)
+        {
+            room.MarkDeleted();
+            roomRepository.Update(room);
+        }
+        else
+        {
+            roomRepository.Remove(room);
+        }
 
         roomRepository.Remove(room);
         await unitOfWork.SaveChangesAsync(cancellationToken);
