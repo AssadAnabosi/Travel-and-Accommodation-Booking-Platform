@@ -5,6 +5,7 @@ namespace Application.Common.Interfaces.Persistence;
 
 public interface IBookingRepository : IRepository<Booking, Guid>
 {
+    //  Must eager-load: User, Room, Room.Hotel — needed for ownership checks and hotel/room display.
     Task<Booking?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<PaginatedList<Booking>> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize,
@@ -14,5 +15,4 @@ public interface IBookingRepository : IRepository<Booking, Guid>
     /// True if the user has at least one CheckedOut booking for a room belonging to this hotel.
     /// </summary>
     Task<bool> HasCompletedStayAsync(Guid userId, int hotelId, CancellationToken cancellationToken = default);
-
 }
