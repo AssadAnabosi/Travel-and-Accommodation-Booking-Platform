@@ -11,6 +11,7 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.ToTable("Reviews");
         builder.HasKey(r => r.Id);
 
+        builder.Property(r => r.Rating).IsRequired();
         builder.Property(r => r.Comment).HasMaxLength(2000);
 
         builder.HasOne(r => r.Hotel).WithMany(h => h.Reviews).HasForeignKey(r => r.HotelId)

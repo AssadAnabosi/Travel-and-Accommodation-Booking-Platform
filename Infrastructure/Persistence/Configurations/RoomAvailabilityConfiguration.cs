@@ -12,6 +12,7 @@ public class RoomAvailabilityConfiguration : IEntityTypeConfiguration<RoomAvaila
         builder.HasKey(a => a.Id);
 
         builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(a => a.BookingId);
 
         builder.OwnsOne(a => a.Range, range =>
         {
@@ -19,12 +20,6 @@ public class RoomAvailabilityConfiguration : IEntityTypeConfiguration<RoomAvaila
             range.Property(r => r.EndDate).HasColumnName("EndDate");
         });
 
-        builder.HasOne(a => a.Room).WithMany(r => r.Availabilities).HasForeignKey(a => a.RoomId)
-            .OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne<Booking>().WithMany().HasForeignKey(a => a.BookingId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.Navigation(a => a.Range).UsePropertyAccessMode(PropertyAccessMode.Field);
-        builder.HasIndex(a => new { a.RoomId, a.BookingId });
     }
 }

@@ -11,7 +11,7 @@ public class CityConfiguration : IEntityTypeConfiguration<City>
         builder.ToTable("Cities");
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Name).HasMaxLength(200).IsRequired();
+        builder.Property(c => c.Name).HasMaxLength(150).IsRequired();
         builder.Property(c => c.Country).HasMaxLength(100).IsRequired();
         builder.Property(c => c.PostOffice).HasMaxLength(20).IsRequired();
         builder.HasIndex(c => new { c.Name, c.Country }).IsUnique();
