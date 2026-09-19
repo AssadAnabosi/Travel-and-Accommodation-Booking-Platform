@@ -49,6 +49,8 @@
 * Checkout
   * `CheckOutBooking/CheckOutBookingCommand.cs` / handler — identical shape, calling `booking.CheckOut()`:
 
+Lets a concrete spec build its filter one optional field at a time (e.g. "if a keyword was given, AND this in") instead of one giant hand-written boolean expression per query method.
+
 ## Folder Struct
 
 `Probably Out of Sync`

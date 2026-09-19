@@ -26,6 +26,12 @@ public class HotelSearchSpecification : BaseSpecification<Hotel>
         if (filter.AmenityIds is { Count: > 0 })
             AddCriteria(h => filter.AmenityIds.All(id => h.HotelAmenities.Any(ha => ha.AmenityId == id)));
 
+        // Price range and date-based availability are deliberately NOT here — they depend on
+        // Room.GetActivePrice() / Room.IsAvailableFor(range), domain methods that can't translate
+        // into SQL. The repository implementation applies these as a post-materialization filter
+        // once results are loaded (or via a raw availability-table subquery for dates specifically) —
+        // handled when we build HotelRepository.SearchAsync, not here in the spec.
+
         AddInclude(h => h.City);
         AddInclude(h => h.Owner);
         AddInclude(h => h.Images);
