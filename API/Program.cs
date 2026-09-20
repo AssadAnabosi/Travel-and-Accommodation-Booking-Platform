@@ -2,19 +2,23 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using API.Middleware;
+using API.Routing;
 using API.Services;
 using Application;
 using Application.Common.Interfaces.Services;
 using Infrastructure;
+using Infrastructure.Persistence;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+    options.Conventions.Add(new RouteTokenTransformerConvention(new LowercaseRouteTokenTransformer())));
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -68,6 +72,13 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+// Apply migrations and seed sample data — Development only (no-op otherwise).
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DatabaseInitializer.InitializeAsync(context, app.Environment.IsDevelopment());
+}
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
