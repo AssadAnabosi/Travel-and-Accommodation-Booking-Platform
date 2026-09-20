@@ -120,8 +120,11 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
     {
         var query = context.Hotels
             .AsNoTracking()
+            .AsSplitQuery()
             .Where(h => h.OwnerId == ownerId)
             .Include(h => h.City)
+            .Include(h => h.Owner)
+            .Include(h => h.Rooms)
             .OrderBy(h => h.Name);
 
         return await PaginateAsync(query, pageNumber, pageSize, cancellationToken);
@@ -132,9 +135,11 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
     {
         var query = context.Hotels
             .AsNoTracking()
+            .AsSplitQuery()
             .Where(h => h.ApprovalStatus == HotelApprovalStatus.Pending)
             .Include(h => h.City)
             .Include(h => h.Owner)
+            .Include(h => h.Rooms)
             .OrderBy(h => h.CreatedAt);
 
         return await PaginateAsync(query, pageNumber, pageSize, cancellationToken);
