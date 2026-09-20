@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 using API.Middleware;
 using API.Routing;
 using API.Services;
@@ -18,7 +19,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers(options =>
-    options.Conventions.Add(new RouteTokenTransformerConvention(new LowercaseRouteTokenTransformer())));
+        options.Conventions.Add(new RouteTokenTransformerConvention(new LowercaseRouteTokenTransformer())))
+    // Serialize/accept enums as their string names (e.g. "HotelOwner") in JSON, not integers.
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
