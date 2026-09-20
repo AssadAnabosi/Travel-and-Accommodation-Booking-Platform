@@ -74,6 +74,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>();
+
 var app = builder.Build();
 
 // Apply migrations and seed sample data — Development only (no-op otherwise).
@@ -98,5 +102,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/api/health");
 
 app.Run();
