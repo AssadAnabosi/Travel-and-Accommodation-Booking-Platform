@@ -37,7 +37,8 @@ public class LoginCommandHandlerTests
         result.RefreshToken.Should().Be("refresh-token");
         result.UserId.Should().Be(user.Id);
         result.Email.Should().Be(user.Email);
-        _users.Verify(r => r.AddRefreshToken(It.Is<RefreshToken>(t => t.Token == "refresh-token")), Times.Once);
+        _users.Verify(r => r.AddRefreshToken(It.Is<Domain.Entities.RefreshToken>(t => t.Token == "refresh-token")),
+            Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
