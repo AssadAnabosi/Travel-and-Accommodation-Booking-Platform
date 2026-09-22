@@ -81,8 +81,9 @@ builder.Services
 var app = builder.Build();
 
 // Apply migrations and seed sample data — Development only (no-op otherwise).
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await DatabaseInitializer.InitializeAsync(context, app.Environment.IsDevelopment());
 }
