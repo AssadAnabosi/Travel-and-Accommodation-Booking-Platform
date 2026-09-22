@@ -89,6 +89,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline.
+app.UseSecurityHeaders();
+
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
