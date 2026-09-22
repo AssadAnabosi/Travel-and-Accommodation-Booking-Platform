@@ -18,14 +18,15 @@ public class PromoteUserRoleCommandHandler(
         var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken)
                    ?? throw new NotFoundException(nameof(User), request.UserId);
 
-        user.PromoteToRole(request.NewRole);
-
+        // Guard on the CURRENT role, before mutating it — an Admin cannot demote themselves.
         if (currentUserService.UserId == request.UserId
             && user.Role == UserRole.Admin
             && request.NewRole != UserRole.Admin)
         {
             throw new ForbiddenAccessException("You cannot remove your own Admin role.");
         }
+
+        user.PromoteToRole(request.NewRole);
 
         userRepository.Update(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
