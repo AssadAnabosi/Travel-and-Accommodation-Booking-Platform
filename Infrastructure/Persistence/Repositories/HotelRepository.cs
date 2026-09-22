@@ -20,6 +20,12 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
     public void Remove(Hotel entity) => context.Hotels.Remove(entity);
     
+    // Tracked + HotelAmenities loaded so a SetAmenities() clear/add is persisted on save.
+    public async Task<Hotel?> GetByIdWithAmenitiesTrackedAsync(int id, CancellationToken cancellationToken = default) =>
+        await context.Hotels
+            .Include(h => h.HotelAmenities)
+            .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+
     public async Task<Hotel?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default) =>
         await context.Hotels
             .AsNoTracking()
