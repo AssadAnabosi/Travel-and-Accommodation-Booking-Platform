@@ -24,6 +24,7 @@ public class DeleteRoomCommandHandler(
 
         if (hasHistory)
         {
+            // Preserve booking history: soft-delete and mangle the number so it can be reused.
             room.MarkDeleted();
             roomRepository.Update(room);
         }
@@ -32,7 +33,6 @@ public class DeleteRoomCommandHandler(
             roomRepository.Remove(room);
         }
 
-        roomRepository.Remove(room);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
