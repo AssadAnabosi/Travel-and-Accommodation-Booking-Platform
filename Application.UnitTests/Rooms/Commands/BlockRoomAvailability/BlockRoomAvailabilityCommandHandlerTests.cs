@@ -48,7 +48,7 @@ public class BlockRoomAvailabilityCommandHandlerTests
     [Fact]
     public async Task Handle_OverlapsExistingBooking_ThrowsRoomNotAvailableAndDoesNotSave()
     {
-        // Mapped to 409 by the global handler (decision #68).
+        // Mapped to 409 by the global exception handler.
         _room.Reserve(DateRange.Of(Start.AddDays(2), End.AddDays(2)), Guid.NewGuid());
         _currentUser.Setup(c => c.UserId).Returns(_ownerId);
 

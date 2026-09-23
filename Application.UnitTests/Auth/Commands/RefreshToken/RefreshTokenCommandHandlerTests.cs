@@ -38,7 +38,7 @@ public class RefreshTokenCommandHandlerTests
         result.RefreshToken.Should().Be("new-token");
         // Old token revoked and chained to the replacement (rotation).
         user.FindActiveRefreshToken("old-token").Should().BeNull();
-        // Regression (decision #51): the new token must be inserted via AddRefreshToken, not Update(user).
+        // Regression: the new token must be inserted via AddRefreshToken, not Update(user).
         _users.Verify(r => r.AddRefreshToken(It.Is<Domain.Entities.RefreshToken>(t => t.Token == "new-token")),
             Times.Once);
         _users.Verify(r => r.Update(It.IsAny<User>()), Times.Never);

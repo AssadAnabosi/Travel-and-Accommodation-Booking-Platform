@@ -50,7 +50,7 @@ public class DeleteReviewCommandHandlerTests
     [Fact]
     public async Task Handle_HotelOwnerOrAnyoneElse_ThrowsForbidden()
     {
-        // Decision #24: a HotelOwner can never delete reviews of their hotel.
+        // A HotelOwner can never delete reviews of their hotel.
         _currentUser.Setup(c => c.IsInRole("HotelOwner")).Returns(true);
         _currentUser.Setup(c => c.UserId).Returns(Guid.NewGuid());
 

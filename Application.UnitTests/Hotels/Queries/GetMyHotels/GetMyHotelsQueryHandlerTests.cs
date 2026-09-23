@@ -31,7 +31,7 @@ public class GetMyHotelsQueryHandlerTests
         page.TotalCount.Should().Be(2);
         page.Items.Select(h => (h.Name, h.ApprovalStatus, h.RoomsCount))
             .Should().Equal(("Live", "Approved", 1), ("Draft", "Pending", 0));
-        // Regression (decision #57): Owner is eager-loaded by GetByOwnerIdAsync.
+        // Regression: Owner is eager-loaded by GetByOwnerIdAsync.
         page.Items.Should().OnlyContain(h => h.OwnerName == "Olivia Owner" && h.CityName == "Paris");
     }
 }

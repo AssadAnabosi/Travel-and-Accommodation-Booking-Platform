@@ -41,7 +41,7 @@ public class RecordHotelVisitCommandHandlerTests
     [Fact]
     public async Task Handle_AnonymousCaller_RecordsVisitWithNullUserId()
     {
-        // Decision #26: anonymous views still count toward trending cities.
+        // Anonymous views still count toward trending cities.
         _hotels.Setup(h => h.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(TestData.Hotel(Guid.NewGuid()));
         _currentUser.Setup(c => c.UserId).Returns((Guid?)null);

@@ -48,7 +48,7 @@ public class UpdateReviewCommandHandlerTests
     [Fact]
     public async Task Handle_AdminWhoIsNotTheAuthor_ThrowsForbidden()
     {
-        // Decision #24: only the author edits; Admin may delete but not rewrite someone's review.
+        // Only the author edits; Admin may delete but not rewrite someone's review.
         _currentUser.Setup(c => c.IsInRole("Admin")).Returns(true);
         _currentUser.Setup(c => c.UserId).Returns(Guid.NewGuid());
 

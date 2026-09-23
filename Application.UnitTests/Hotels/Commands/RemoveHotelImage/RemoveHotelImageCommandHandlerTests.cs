@@ -37,7 +37,7 @@ public class RemoveHotelImageCommandHandlerTests
         await CreateHandler().Handle(new RemoveHotelImageCommand(1, 8), CancellationToken.None);
 
         hotel.Images.Should().ContainSingle().Which.Url.Should().Be("keep.jpg");
-        // Regression (decision #71): removing from the AsNoTracking GetByIdWithDetailsAsync graph + Update()
+        // Regression: removing from the AsNoTracking GetByIdWithDetailsAsync graph + Update()
         // returned 204 but never deleted the row. Must use the tracked load and rely on change tracking.
         _hotels.Verify(h => h.GetByIdWithImagesTrackedAsync(1, It.IsAny<CancellationToken>()), Times.Once);
         _hotels.Verify(h => h.GetByIdWithDetailsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);

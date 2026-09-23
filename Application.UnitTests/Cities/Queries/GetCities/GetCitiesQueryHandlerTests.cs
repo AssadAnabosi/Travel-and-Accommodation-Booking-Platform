@@ -29,7 +29,7 @@ public class GetCitiesQueryHandlerTests
         city.Name.Should().Be("Paris");
         city.Country.Should().Be("France");
         city.PostOffice.Should().Be("75000");
-        // Regression (decision #56): HotelsCount comes from the eager-loaded Hotels collection.
+        // Regression: HotelsCount comes from the eager-loaded Hotels collection.
         city.HotelsCount.Should().Be(2);
     }
 }

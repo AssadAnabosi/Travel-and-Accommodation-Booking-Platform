@@ -34,7 +34,7 @@ public class UpdateRoomCommandHandlerTests
 
         dto.AdultCapacity.Should().Be(4);
         dto.ChildCapacity.Should().Be(3);
-        dto.Number.Should().Be("101"); // decision #22: number is immutable via Update
+        dto.Number.Should().Be("101"); // the room number is immutable via Update
         dto.ModifiedAt.Should().NotBeNull();
         _rooms.Verify(r => r.Update(_room), Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);

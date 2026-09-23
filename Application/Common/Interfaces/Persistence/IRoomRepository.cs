@@ -13,7 +13,7 @@ public interface IRoomRepository : IRepository<Room, int>
 
     /// <summary>
     /// Tracked load with Hotel (ownership checks) + Images, so adding/removing a gallery image is
-    /// change-tracked and persisted (the same fix as the hotel images, decision #71).
+    /// change-tracked and persisted (the same fix as for hotel images).
     /// </summary>
     Task<Room?> GetByIdWithImagesTrackedAsync(int id, CancellationToken cancellationToken = default);
 

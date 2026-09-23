@@ -30,7 +30,7 @@ public class CreateRoomCommandHandlerTests
     [Fact]
     public async Task Handle_Owner_AddsRoomEvenToAPendingHotel()
     {
-        // Decision #21: rooms can be added regardless of the hotel's approval status.
+        // Rooms can be added regardless of the hotel's approval status.
         _currentUser.Setup(c => c.UserId).Returns(_ownerId);
         Room? added = null;
         _rooms.Setup(r => r.AddAsync(It.IsAny<Room>(), It.IsAny<CancellationToken>()))

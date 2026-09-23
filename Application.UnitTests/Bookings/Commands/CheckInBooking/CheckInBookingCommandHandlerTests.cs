@@ -57,7 +57,7 @@ public class CheckInBookingCommandHandlerTests
     [Fact]
     public async Task Handle_PendingBooking_ThrowsInvalidStateTransition()
     {
-        // Mapped to 409 by the global handler (decision #68).
+        // Mapped to 409 by the global exception handler.
         var booking = GivenBooking(confirmed: false);
         _currentUser.Setup(c => c.UserId).Returns(_hotelOwnerId);
 

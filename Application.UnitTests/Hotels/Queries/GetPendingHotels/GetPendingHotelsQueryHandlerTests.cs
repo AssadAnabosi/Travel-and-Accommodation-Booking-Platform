@@ -32,7 +32,7 @@ public class GetPendingHotelsQueryHandlerTests
         dto.ApprovalStatus.Should().Be("Pending");
         dto.OwnerId.Should().Be(ownerId);
         dto.OwnerName.Should().Be("Olivia Owner");
-        // Regression (decision #57c): Rooms are included so the count is accurate.
+        // Regression: Rooms are included so the count is accurate.
         dto.RoomsCount.Should().Be(2);
     }
 }

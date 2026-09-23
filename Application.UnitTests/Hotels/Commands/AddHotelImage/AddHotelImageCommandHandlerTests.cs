@@ -35,7 +35,7 @@ public class AddHotelImageCommandHandlerTests
 
         hotel.Images.Should().HaveCount(2);
         hotel.Images.Single(i => i.Url == "new.jpg").DisplayOrder.Should().Be(1);
-        // Decision #71: tracked load + change tracking, not Update() of an AsNoTracking graph.
+        // Tracked load + change tracking, not Update() of an AsNoTracking graph.
         _hotels.Verify(h => h.GetByIdWithDetailsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         _hotels.Verify(h => h.Update(It.IsAny<Hotel>()), Times.Never);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);

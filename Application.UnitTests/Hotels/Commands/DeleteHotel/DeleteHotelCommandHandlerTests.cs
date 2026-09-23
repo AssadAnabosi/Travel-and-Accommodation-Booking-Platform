@@ -31,7 +31,7 @@ public class DeleteHotelCommandHandlerTests
     [Fact]
     public async Task Handle_HotelWithRooms_ThrowsConflictEvenThoughRoomsAreNotLoaded()
     {
-        // Regression (decision #72): GetByIdAsync doesn't load Rooms, so the old `hotel.Rooms.Count > 0` guard
+        // Regression: GetByIdAsync doesn't load Rooms, so the old `hotel.Rooms.Count > 0` guard
         // was always false and the Cascade FK silently deleted every room. The check must query the database.
         var hotel = TestData.Hotel(Guid.NewGuid(), id: 4); // Rooms collection empty, as GetByIdAsync returns it
         _hotels.Setup(h => h.GetByIdAsync(4, It.IsAny<CancellationToken>())).ReturnsAsync(hotel);

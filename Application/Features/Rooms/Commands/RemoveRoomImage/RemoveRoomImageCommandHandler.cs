@@ -14,7 +14,7 @@ public class RemoveRoomImageCommandHandler(
 {
     public async Task Handle(RemoveRoomImageCommand request, CancellationToken cancellationToken)
     {
-        // Must be a tracked load, or the removal is never persisted (see decision #71 for hotel images).
+        // Must be a tracked load, or the removal is never persisted (the same bug hit hotel images).
         var room = await roomRepository.GetByIdWithImagesTrackedAsync(request.RoomId, cancellationToken)
                    ?? throw new NotFoundException(nameof(Room), request.RoomId);
 

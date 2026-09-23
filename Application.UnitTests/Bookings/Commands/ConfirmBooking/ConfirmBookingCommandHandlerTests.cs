@@ -83,7 +83,7 @@ public class ConfirmBookingCommandHandlerTests
     [Fact]
     public async Task Handle_EmailIsSentOnlyAfterTheConfirmationIsSaved()
     {
-        // Decision #69: the booking is paid + persisted first; email is best-effort afterwards.
+        // The booking is paid + persisted first; email is best-effort afterwards.
         var booking = GivenBooking();
         var calls = new List<string>();
         _uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).Callback(() => calls.Add("save"))

@@ -35,7 +35,7 @@ public class GetHotelByIdQueryHandlerTests
         dto.Id.Should().Be(1);
         dto.Name.Should().Be("Grand");
         dto.ApprovalStatus.Should().Be("Pending");
-        // Regression (decision #57): City/Owner come from the detailed load and must not be null.
+        // Regression: City/Owner come from the detailed load and must not be null.
         dto.CityName.Should().Be("Paris");
         dto.OwnerId.Should().Be(_ownerId);
         dto.OwnerName.Should().Be("Olivia Owner");

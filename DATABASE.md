@@ -4,8 +4,8 @@ This document describes every table in the TABP database: its columns, keys, ind
 domain enforces on it.
 
 - **Engine:** SQL Server, via EF Core (code-first)
-- **Current migration:** `20260923095420_AddCityThumbnailUrl` (after `20260920112153_InitialCreate`). Note:
-  `Infrastructure/.gitignore` excludes `Migrations/`, so migrations are not in git.
+- **Current migration:** `20260923095420_AddCityThumbnailUrl` (after `20260920112153_InitialCreate`), both committed
+  in `Infrastructure/Migrations`.
 - **Source of truth:** `Infrastructure/Migrations/AppDbContextModelSnapshot.cs`, generated from the configurations in
   `Infrastructure/Persistence/Configurations/*.cs`
 - **Diagram:** [`database-erd.eraser`](database-erd.eraser). Paste it into an eraser.io *Entity Relationship Diagram*
@@ -433,7 +433,7 @@ DELETE Hotel ──> Rooms ──> RoomImages, Discounts, RoomAvailabilities
              ├─> HotelAmenities
              ├─> Reviews
              └─> HotelVisits
-          (the API blocks this while the hotel has ANY rooms, active or soft-deleted (PROGRESS #72);
+          (the API blocks this while the hotel has ANY rooms, active or soft-deleted;
            at the DB level it would also fail if any Room has a Booking, because Bookings.RoomId is RESTRICT)
 
 DELETE User  ──> RefreshTokens
@@ -472,7 +472,7 @@ refer to.
 5. **Discount overlap is enforced in the application only.** `CreateDiscount`/`UpdateDiscount` validators reject an
    active discount that overlaps another on the same room (400), but there is no DB constraint, so a concurrent or
    direct write could still create one. `GetActivePrice` would then use whichever it finds first.
-6. **No index for the hotel bookings list** (`GET /api/hotels/{id}/bookings`, PROGRESS #78). It filters bookings by
+6. **No index for the hotel bookings list** (`GET /api/hotels/{id}/bookings`). It filters bookings by
    `Rooms.HotelId` (via `IX_Bookings_RoomId`) and sorts by `CheckInDate`. Fine at current volumes. If it gets slow,
    add an index on `Bookings (RoomId, CheckInDate)`.
 

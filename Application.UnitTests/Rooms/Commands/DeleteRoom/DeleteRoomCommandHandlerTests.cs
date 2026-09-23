@@ -40,7 +40,7 @@ public class DeleteRoomCommandHandlerTests
         room.IsActive.Should().BeFalse();
         room.Number.Should().Contain("::deleted::");
         _rooms.Verify(r => r.Update(room), Times.Once);
-        // Regression (decision #61): a booked room must never be hard-deleted (FK violation).
+        // Regression: a booked room must never be hard-deleted (FK violation).
         _rooms.Verify(r => r.Remove(It.IsAny<Room>()), Times.Never);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

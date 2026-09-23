@@ -30,7 +30,7 @@ public class UpdateHotelAmenitiesCommandHandlerTests
         await CreateHandler().Handle(new UpdateHotelAmenitiesCommand(1, new[] { 1, 2, 3 }), CancellationToken.None);
 
         hotel.HotelAmenities.Should().HaveCount(3);
-        // Regression (decision #62): must use the tracked load and rely on change tracking, not Update().
+        // Regression: must use the tracked load and rely on change tracking, not Update().
         _hotels.Verify(r => r.GetByIdWithAmenitiesTrackedAsync(1, It.IsAny<CancellationToken>()), Times.Once);
         _hotels.Verify(r => r.Update(It.IsAny<Hotel>()), Times.Never);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
