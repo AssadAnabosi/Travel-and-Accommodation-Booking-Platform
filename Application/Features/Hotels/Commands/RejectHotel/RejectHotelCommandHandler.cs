@@ -1,11 +1,18 @@
-﻿using Application.Common.Exceptions;
+using System.Net;
+using Application.Common.Exceptions;
 using Application.Common.Interfaces.Persistence;
+using Application.Common.Interfaces.Services;
+using Application.Common.Models;
 using Domain.Entities;
 using MediatR;
 
 namespace Application.Features.Hotels.Commands.RejectHotel;
 
-public class RejectHotelCommandHandler(IHotelRepository hotelRepository, IUnitOfWork unitOfWork)
+public class RejectHotelCommandHandler(
+    IHotelRepository hotelRepository,
+    IUserRepository userRepository,
+    IUnitOfWork unitOfWork,
+    IEmailService emailService)
     : IRequestHandler<RejectHotelCommand>
 {
     public async Task Handle(RejectHotelCommand request, CancellationToken cancellationToken)
@@ -18,6 +25,18 @@ public class RejectHotelCommandHandler(IHotelRepository hotelRepository, IUnitOf
         hotelRepository.Update(hotel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // TODO once IEmailService exists: notify the owner with the rejection reason.
+        // Notify the owner with the reason (best-effort; see IEmailService).
+        var owner = await userRepository.GetByIdAsync(hotel.OwnerId, cancellationToken);
+        if (owner is null) return;
+
+        var emailBody =
+            $"<p>Hi {WebUtility.HtmlEncode(owner.FirstName)},</p>" +
+            $"<p>Your hotel <strong>{WebUtility.HtmlEncode(hotel.Name)}</strong> was not approved.</p>" +
+            $"<p>Reason: {WebUtility.HtmlEncode(hotel.RejectionReason)}</p>" +
+            "<p>Edit the listing to address this and it will be resubmitted for review automatically.</p>";
+
+        await emailService.SendAsync(
+            new EmailMessage(owner.Email, $"Your hotel \"{hotel.Name}\" needs changes", emailBody),
+            cancellationToken);
     }
 }

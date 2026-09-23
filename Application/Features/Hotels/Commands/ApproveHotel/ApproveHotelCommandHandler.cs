@@ -1,11 +1,18 @@
-﻿using Application.Common.Exceptions;
+using System.Net;
+using Application.Common.Exceptions;
 using Application.Common.Interfaces.Persistence;
+using Application.Common.Interfaces.Services;
+using Application.Common.Models;
 using Domain.Entities;
 using MediatR;
 
 namespace Application.Features.Hotels.Commands.ApproveHotel;
 
-public class ApproveHotelCommandHandler(IHotelRepository hotelRepository, IUnitOfWork unitOfWork)
+public class ApproveHotelCommandHandler(
+    IHotelRepository hotelRepository,
+    IUserRepository userRepository,
+    IUnitOfWork unitOfWork,
+    IEmailService emailService)
     : IRequestHandler<ApproveHotelCommand>
 {
     public async Task Handle(ApproveHotelCommand request, CancellationToken cancellationToken)
@@ -18,6 +25,17 @@ public class ApproveHotelCommandHandler(IHotelRepository hotelRepository, IUnitO
         hotelRepository.Update(hotel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // TODO once IEmailService is wired up in Infrastructure: notify the owner their hotel went live.
+        // Notify the owner their hotel went live (best-effort; see IEmailService).
+        var owner = await userRepository.GetByIdAsync(hotel.OwnerId, cancellationToken);
+        if (owner is null) return;
+
+        var emailBody =
+            $"<p>Hi {WebUtility.HtmlEncode(owner.FirstName)},</p>" +
+            $"<p>Good news: your hotel <strong>{WebUtility.HtmlEncode(hotel.Name)}</strong> has been approved " +
+            "and is now visible to guests in search.</p>";
+
+        await emailService.SendAsync(
+            new EmailMessage(owner.Email, $"Your hotel \"{hotel.Name}\" is live", emailBody),
+            cancellationToken);
     }
 }

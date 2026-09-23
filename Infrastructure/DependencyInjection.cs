@@ -3,6 +3,7 @@ using Application.Common.Interfaces.Services;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Services;
+using MailKit.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,7 +47,31 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IPaymentGateway, MockPaymentGateway>();
-        services.AddScoped<IEmailService, LoggingEmailService>();
+
+        // Real SMTP (MailKit) when Smtp:Host is set — compose points it at MailHog; otherwise log only.
+        var smtpSettings = new SmtpSettings
+        {
+            Host = configuration["Smtp:Host"] ?? "",
+            Port = int.TryParse(configuration["Smtp:Port"], out var port) ? port : 25,
+            Security = Enum.TryParse<SecureSocketOptions>(configuration["Smtp:Security"], true, out var security)
+                ? security
+                : SecureSocketOptions.Auto,
+            Username = configuration["Smtp:Username"],
+            Password = configuration["Smtp:Password"],
+            FromAddress = configuration["Smtp:FromAddress"] is { Length: > 0 } from ? from : "no-reply@tabp.dev",
+            FromName = configuration["Smtp:FromName"] is { Length: > 0 } name ? name : "TABP Hotels",
+            TimeoutMs = int.TryParse(configuration["Smtp:TimeoutMs"], out var timeout) ? timeout : 10_000
+        };
+        if (string.IsNullOrWhiteSpace(smtpSettings.Host))
+        {
+            services.AddScoped<IEmailService, LoggingEmailService>();
+        }
+        else
+        {
+            services.AddSingleton(smtpSettings);
+            services.AddScoped<IEmailService, SmtpEmailService>();
+        }
+
         // Set the PDF font resolver once, before any PDF is generated (the slim container has no
         // OS fonts, which PdfSharpCore's default resolver requires). See FileFontResolver.
         GlobalFontSettings.FontResolver = new FileFontResolver("AppSans");

@@ -1,4 +1,5 @@
-﻿using Application.Common.Exceptions;
+﻿using System.Net;
+using Application.Common.Exceptions;
 using Application.Common.Interfaces.Persistence;
 using Application.Common.Interfaces.Services;
 using Application.Common.Models;
@@ -43,7 +44,7 @@ public class ConfirmBookingCommandHandler(
 
         var pdf = pdfGenerator.GenerateBookingConfirmation(booking);
         var emailBody =
-            $"<p>Your booking at {booking.Room.Hotel.Name} is confirmed. Confirmation number: {booking.ConfirmationNumber}.</p>";
+            $"<p>Your booking at {WebUtility.HtmlEncode(booking.Room.Hotel.Name)} is confirmed. Confirmation number: {booking.ConfirmationNumber}.</p>";
 
         await emailService.SendAsync(
             new EmailMessage(booking.User.Email, "Your booking is confirmed", emailBody, pdf,

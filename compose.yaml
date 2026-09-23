@@ -10,6 +10,10 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=sql-server,1433;Database=TABP;User Id=sa;Password=Your_strong!Passw0rd;TrustServerCertificate=True;Encrypt=False
       - Redis__ConnectionString=redis:6379
+      # Outgoing email goes to MailHog; open http://localhost:8025 to read it.
+      - Smtp__Host=mailhog
+      - Smtp__Port=1025
+      - Smtp__Security=None
     ports:
       - "8080:8080"
     depends_on:
@@ -17,6 +21,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailhog:
+        condition: service_started # email is best-effort, so no need to wait for a healthcheck
 
   sql-server:
     image: mcr.microsoft.com/mssql/server:2025-latest
@@ -49,6 +55,13 @@ services:
       interval: 10s
       timeout: 3s
       retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: tabp-mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI
 
 volumes:
   sql_data:
