@@ -13,7 +13,9 @@ public class DeleteHotelCommandHandler(IHotelRepository hotelRepository, IUnitOf
         var hotel = await hotelRepository.GetByIdAsync(request.HotelId, cancellationToken)
                     ?? throw new NotFoundException(nameof(Hotel), request.HotelId);
 
-        if (hotel.Rooms.Count > 0)
+        // Query, not hotel.Rooms: GetByIdAsync doesn't load Rooms, so that count was always 0 and the
+        // Cascade FK silently deleted every room (decision #72). Soft-deleted rooms count — they hold history.
+        if (await hotelRepository.HasRoomsAsync(hotel.Id, cancellationToken))
             throw new ConflictException("Cannot delete a hotel that still has rooms. Remove its rooms first.");
 
         hotelRepository.Remove(hotel);

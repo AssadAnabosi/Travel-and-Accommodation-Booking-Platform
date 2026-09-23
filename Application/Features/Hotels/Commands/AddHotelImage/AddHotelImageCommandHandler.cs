@@ -14,7 +14,8 @@ public class AddHotelImageCommandHandler(
 {
     public async Task<int> Handle(AddHotelImageCommand request, CancellationToken cancellationToken)
     {
-        var hotel = await hotelRepository.GetByIdWithDetailsAsync(request.HotelId, cancellationToken)
+        // Tracked load: change tracking inserts the new image; no Update() of the whole graph needed.
+        var hotel = await hotelRepository.GetByIdWithImagesTrackedAsync(request.HotelId, cancellationToken)
                     ?? throw new NotFoundException(nameof(Hotel), request.HotelId);
 
         if (!currentUserService.IsInRole("Admin") && hotel.OwnerId != currentUserService.UserId)
@@ -22,7 +23,6 @@ public class AddHotelImageCommandHandler(
 
         var image = hotel.AddImage(request.Url);
 
-        hotelRepository.Update(hotel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return image.Id;

@@ -14,7 +14,9 @@ public class RemoveHotelImageCommandHandler(
 {
     public async Task Handle(RemoveHotelImageCommand request, CancellationToken cancellationToken)
     {
-        var hotel = await hotelRepository.GetByIdWithDetailsAsync(request.HotelId, cancellationToken)
+        // Must be a tracked load: removing from the AsNoTracking GetByIdWithDetailsAsync graph and calling
+        // Update() returned 204 but never deleted the row (decision #71).
+        var hotel = await hotelRepository.GetByIdWithImagesTrackedAsync(request.HotelId, cancellationToken)
                     ?? throw new NotFoundException(nameof(Hotel), request.HotelId);
 
         if (!currentUserService.IsInRole("Admin") && hotel.OwnerId != currentUserService.UserId)
@@ -22,7 +24,6 @@ public class RemoveHotelImageCommandHandler(
 
         hotel.RemoveImage(request.ImageId);
 
-        hotelRepository.Update(hotel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

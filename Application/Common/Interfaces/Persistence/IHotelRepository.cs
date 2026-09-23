@@ -16,6 +16,12 @@ public interface IHotelRepository : IRepository<Hotel, int>
     /// </summary>
     Task<Hotel?> GetByIdWithAmenitiesTrackedAsync(int id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Tracked load with Images eager-loaded, so adding/removing a gallery image is change-tracked
+    /// and persisted (removing from the AsNoTracking GetByIdWithDetailsAsync graph never issued a DELETE).
+    /// </summary>
+    Task<Hotel?> GetByIdWithImagesTrackedAsync(int id, CancellationToken cancellationToken = default);
+
     Task<PaginatedList<Hotel>> SearchAsync(HotelSearchFilter filter, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
 
@@ -26,6 +32,9 @@ public interface IHotelRepository : IRepository<Hotel, int>
     Task<IReadOnlyList<Hotel>> GetFeaturedDealsAsync(int count, CancellationToken cancellationToken = default);
 
     Task<bool> IsOwnedByAsync(int hotelId, Guid ownerId, CancellationToken cancellationToken = default);
+
+    /// <summary>True if any room row (active or soft-deleted) still belongs to the hotel.</summary>
+    Task<bool> HasRoomsAsync(int hotelId, CancellationToken cancellationToken = default);
 
     Task<PaginatedList<Hotel>> GetByOwnerIdAsync(Guid ownerId, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);

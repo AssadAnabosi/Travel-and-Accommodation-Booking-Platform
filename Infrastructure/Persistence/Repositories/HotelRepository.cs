@@ -26,6 +26,13 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .Include(h => h.HotelAmenities)
             .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
 
+    // Tracked + Images loaded so AddImage()/RemoveImage() are persisted on save (a removed image is
+    // orphaned from its required Hotel FK, so EF deletes it).
+    public async Task<Hotel?> GetByIdWithImagesTrackedAsync(int id, CancellationToken cancellationToken = default) =>
+        await context.Hotels
+            .Include(h => h.Images)
+            .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
+
     public async Task<Hotel?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default) =>
         await context.Hotels
             .AsNoTracking()
@@ -120,6 +127,9 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
     public async Task<bool> IsOwnedByAsync(int hotelId, Guid ownerId, CancellationToken cancellationToken = default) =>
         await context.Hotels.AnyAsync(h => h.Id == hotelId && h.OwnerId == ownerId, cancellationToken);
+
+    public async Task<bool> HasRoomsAsync(int hotelId, CancellationToken cancellationToken = default) =>
+        await context.Rooms.AnyAsync(r => r.HotelId == hotelId, cancellationToken);
 
     public async Task<PaginatedList<Hotel>> GetByOwnerIdAsync(Guid ownerId, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default)
