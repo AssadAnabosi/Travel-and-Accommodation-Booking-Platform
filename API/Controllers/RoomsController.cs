@@ -1,10 +1,14 @@
+using Application.Common.Models;
+using Application.Features.Rooms.Commands.AddRoomImage;
 using Application.Features.Rooms.Commands.BlockRoomAvailability;
 using Application.Features.Rooms.Commands.CreateRoom;
 using Application.Features.Rooms.Commands.DeleteRoom;
+using Application.Features.Rooms.Commands.RemoveRoomImage;
 using Application.Features.Rooms.Commands.UnblockRoomAvailability;
 using Application.Features.Rooms.Commands.UpdateRoom;
 using Application.Features.Rooms.Common;
 using Application.Features.Rooms.Queries.GetRoomById;
+using Application.Features.Rooms.Queries.GetRoomImages;
 using Application.Features.Rooms.Queries.GetRoomsByHotel;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -57,6 +61,33 @@ public class RoomsController(ISender sender) : ControllerBase
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteRoomCommand(id), cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>Lists a room's gallery images (with the ids needed to remove them).</summary>
+    [HttpGet("{id:int}/images")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<ImageDto>>> GetImages(int id, CancellationToken cancellationToken)
+        => Ok(await sender.Send(new GetRoomImagesQuery(id), cancellationToken));
+
+    /// <summary>Adds an image to a room; returns the new <c>imageId</c>.</summary>
+    [HttpPost("{id:int}/images")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddImage(int id, AddRoomImageCommand command, CancellationToken cancellationToken)
+    {
+        var imageId = await sender.Send(command with { RoomId = id }, cancellationToken);
+        return CreatedAtAction(nameof(GetImages), new { id }, new { imageId });
+    }
+
+    /// <summary>Removes an image from a room; 404 if the image isn't on this room.</summary>
+    [HttpDelete("{id:int}/images/{imageId:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveImage(int id, int imageId, CancellationToken cancellationToken)
+    {
+        await sender.Send(new RemoveRoomImageCommand(id, imageId), cancellationToken);
         return NoContent();
     }
 

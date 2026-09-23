@@ -1,4 +1,6 @@
 using Application.Common.Models;
+using Application.Features.Bookings.Common;
+using Application.Features.Bookings.Queries.GetHotelBookings;
 using Application.Features.Hotels.Commands.AddHotelImage;
 using Application.Features.Hotels.Commands.ApproveHotel;
 using Application.Features.Hotels.Commands.CreateHotel;
@@ -12,6 +14,7 @@ using Application.Features.Hotels.Common;
 using Application.Features.Hotels.Queries.GetFeaturedDeals;
 using Application.Features.Hotels.Queries.GetHotelById;
 using Application.Features.Hotels.Queries.GetHotelDetail;
+using Application.Features.Hotels.Queries.GetHotelImages;
 using Application.Features.Hotels.Queries.GetHotels;
 using Application.Features.Hotels.Queries.GetMyHotels;
 using Application.Features.Hotels.Queries.GetPendingHotels;
@@ -175,6 +178,26 @@ public class HotelsController(ISender sender) : ControllerBase
         var imageId = await sender.Send(command with { HotelId = id }, cancellationToken);
         return CreatedAtAction(nameof(GetManage), new { id }, new { imageId });
     }
+
+    /// <summary>Lists a hotel's gallery images in any approval state (with the ids needed to remove them).</summary>
+    [Authorize(Roles = "Admin,HotelOwner")]
+    [HttpGet("{id:int}/images")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<ImageDto>>> GetImages(int id, CancellationToken cancellationToken)
+        => Ok(await sender.Send(new GetHotelImagesQuery(id), cancellationToken));
+
+    /// <summary>
+    /// Lists a hotel's bookings for the front desk (its owner or an admin), ordered by check-in date.
+    /// Filter by status, check-in date range and keyword (guest name/email or confirmation number).
+    /// </summary>
+    [Authorize(Roles = "Admin,HotelOwner")]
+    [HttpGet("{id:int}/bookings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PaginatedList<HotelBookingListItemDto>>> GetBookings(
+        int id, [FromQuery] GetHotelBookingsQuery query, CancellationToken cancellationToken)
+        => Ok(await sender.Send(query with { HotelId = id }, cancellationToken));
 
     /// <summary>Removes an image from a hotel.</summary>
     [Authorize(Roles = "Admin,HotelOwner")]

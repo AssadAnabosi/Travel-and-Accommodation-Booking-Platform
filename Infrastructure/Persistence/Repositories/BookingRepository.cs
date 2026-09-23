@@ -43,6 +43,44 @@ public class BookingRepository(AppDbContext context) : IBookingRepository
         return new PaginatedList<Booking>(items, totalCount, pageNumber, pageSize);
     }
 
+    public async Task<PaginatedList<Booking>> GetByHotelIdAsync(int hotelId, HotelBookingFilter filter,
+        int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = context.Bookings
+            .AsNoTracking()
+            .Where(b => b.Room.HotelId == hotelId);
+
+        if (filter.Status.HasValue)
+            query = query.Where(b => b.Status == filter.Status.Value);
+
+        if (filter.CheckInFrom.HasValue)
+            query = query.Where(b => b.StayRange.StartDate >= filter.CheckInFrom.Value);
+
+        if (filter.CheckInTo.HasValue)
+            query = query.Where(b => b.StayRange.StartDate <= filter.CheckInTo.Value);
+
+        if (!string.IsNullOrWhiteSpace(filter.Keyword))
+            query = query.Where(b => b.ConfirmationNumber.Contains(filter.Keyword)
+                                     || b.User.Email.Contains(filter.Keyword)
+                                     || b.User.FirstName.Contains(filter.Keyword)
+                                     || b.User.LastName.Contains(filter.Keyword));
+
+        var ordered = query
+            .Include(b => b.User)
+            .Include(b => b.Room)
+            .OrderBy(b => b.StayRange.StartDate)
+            .ThenBy(b => b.Room.Number)
+            .ThenBy(b => b.CreatedAt);
+
+        var totalCount = await ordered.CountAsync(cancellationToken);
+        var items = await ordered
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PaginatedList<Booking>(items, totalCount, pageNumber, pageSize);
+    }
+
     public async Task<bool> HasCompletedStayAsync(Guid userId, int hotelId,
         CancellationToken cancellationToken = default) =>
         await context.Bookings.AnyAsync(

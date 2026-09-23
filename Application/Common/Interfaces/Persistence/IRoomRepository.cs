@@ -11,6 +11,12 @@ public interface IRoomRepository : IRepository<Room, int>
     // Includes Hotel (ownership checks) + Availabilities + Discounts — used by all admin/owner mutations.
     Task<Room?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Tracked load with Hotel (ownership checks) + Images, so adding/removing a gallery image is
+    /// change-tracked and persisted (the same fix as the hotel images, decision #71).
+    /// </summary>
+    Task<Room?> GetByIdWithImagesTrackedAsync(int id, CancellationToken cancellationToken = default);
+
     Task<bool> IsAvailableAsync(int roomId, DateRange range, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Room>> GetByHotelIdAsync(int hotelId, CancellationToken cancellationToken = default);
 

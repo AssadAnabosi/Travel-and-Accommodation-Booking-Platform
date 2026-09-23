@@ -33,6 +33,12 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
             .Include(r => r.Discounts)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
+    public async Task<Room?> GetByIdWithImagesTrackedAsync(int id, CancellationToken cancellationToken = default) =>
+        await context.Rooms
+            .Include(r => r.Hotel)
+            .Include(r => r.Images)
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
     // SQL mirror of Room.IsAvailableFor: active room with no Booked/Blocked range overlapping [Start, End).
     public async Task<bool> IsAvailableAsync(int roomId, DateRange range,
         CancellationToken cancellationToken = default)
