@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using RedisRateLimiting;
 using StackExchange.Redis;
 
@@ -38,7 +39,8 @@ public static class RateLimitingExtensions
                 if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                     context.HttpContext.Response.Headers["Retry-After"] = ((int)retryAfter.TotalSeconds).ToString();
                 await context.HttpContext.Response.WriteAsJsonAsync(
-                    new { title = "Too many requests. Please slow down.", status = 429 }, token);
+                    new ProblemDetails { Title = "Too many requests. Please slow down.", Status = StatusCodes.Status429TooManyRequests },
+                    options: null, contentType: "application/problem+json", cancellationToken: token);
             };
 
             // Global: per authenticated user when present, else per client IP (real IP via forwarded headers).

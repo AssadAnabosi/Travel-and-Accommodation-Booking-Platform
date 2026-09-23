@@ -1,4 +1,5 @@
 using Application.Common.Exceptions;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -44,6 +45,9 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService
         NotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
         ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
         PaymentFailedException => (StatusCodes.Status402PaymentRequired, "Payment required"),
+        // Domain rule violations carry safe, user-facing messages too.
+        RoomNotAvailableException => (StatusCodes.Status409Conflict, "Conflict"),
+        DomainException => (StatusCodes.Status400BadRequest, "Business rule violation"),
         _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
     };
 }

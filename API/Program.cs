@@ -7,6 +7,7 @@ using API.Middleware;
 using API.RateLimiting;
 using API.Routing;
 using API.Services;
+using API.Swagger;
 using Application;
 using Application.Common.Interfaces.Services;
 using Infrastructure;
@@ -15,6 +16,7 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -25,7 +27,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers(options =>
-        options.Conventions.Add(new RouteTokenTransformerConvention(new LowercaseRouteTokenTransformer())))
+    {
+        options.Conventions.Add(new RouteTokenTransformerConvention(new LowercaseRouteTokenTransformer()));
+
+        // Document the responses every operation can return in Swagger (the global exception handler
+        // and rate limiter write these ProblemDetails shapes). 401/403 are added only to endpoints that
+        // require auth (AuthorizationResponsesConvention); endpoint-specific codes (201/204/402/404/409)
+        // are declared per action on the controllers.
+        options.Conventions.Add(new AuthorizationResponsesConvention());
+        options.Filters.Add(new ProducesAttribute("application/json"));
+        options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest));
+        options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests));
+        options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status500InternalServerError));
+    })
     // Serialize/accept enums as their string names (e.g. "HotelOwner") in JSON, not integers.
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddApplication();
@@ -75,6 +89,12 @@ builder.Services.AddRedisRateLimiting(builder.Configuration);
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "TABP API", Version = "v1" });
+
+    // Surface controller/action /// summaries in the UI (XML file emitted via the csproj).
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {

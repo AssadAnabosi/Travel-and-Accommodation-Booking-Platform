@@ -12,26 +12,38 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
+/// <summary>Authentication — registration, login, JWT refresh (via HttpOnly cookie), logout, and the current user.</summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController(ISender sender) : ControllerBase
 {
     private const string RefreshTokenCookie = "refreshToken";
 
+    /// <summary>Returns the profile of the currently authenticated user.</summary>
     [Authorize]
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserProfileDto>> Me(CancellationToken cancellationToken)
         => Ok(await sender.Send(new GetMyProfileQuery(), cancellationToken));
 
+    /// <summary>Registers a new Customer account and signs it in (refresh token set as an HttpOnly cookie).</summary>
     [HttpPost("register")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<AuthResult>> Register(RegisterCommand command, CancellationToken cancellationToken)
         => Ok(IssueTokens(await sender.Send(command, cancellationToken)));
 
+    /// <summary>Signs in with email and password (refresh token set as an HttpOnly cookie).</summary>
     [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResult>> Login(LoginCommand command, CancellationToken cancellationToken)
         => Ok(IssueTokens(await sender.Send(command, cancellationToken)));
 
+    /// <summary>Rotates the refresh-token cookie and issues a new access token.</summary>
     [HttpPost("refresh")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResult>> Refresh(CancellationToken cancellationToken)
     {
         var token = Request.Cookies[RefreshTokenCookie];
@@ -41,7 +53,9 @@ public class AuthController(ISender sender) : ControllerBase
         return Ok(IssueTokens(await sender.Send(new RefreshTokenCommand(token), cancellationToken)));
     }
 
+    /// <summary>Revokes the refresh token (if any) and clears its cookie.</summary>
     [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var token = Request.Cookies[RefreshTokenCookie];
