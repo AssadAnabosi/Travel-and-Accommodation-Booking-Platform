@@ -5,6 +5,7 @@ public record CityDto(
     string Name,
     string Country,
     string PostOffice,
+    string? ThumbnailUrl,
     int HotelsCount,
     DateTime CreatedAt,
     DateTime? ModifiedAt);

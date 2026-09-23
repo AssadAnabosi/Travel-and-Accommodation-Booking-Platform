@@ -13,7 +13,7 @@ public class GetCityByIdQueryHandler(ICityRepository cityRepository) : IRequestH
         var city = await cityRepository.GetByIdAsync(request.CityId, cancellationToken)
                    ?? throw new NotFoundException(nameof(City), request.CityId);
 
-        return new CityDto(city.Id, city.Name, city.Country, city.PostOffice, city.Hotels.Count, city.CreatedAt,
+        return new CityDto(city.Id, city.Name, city.Country, city.PostOffice, city.ThumbnailUrl, city.Hotels.Count, city.CreatedAt,
             city.ModifiedAt);
     }
 }

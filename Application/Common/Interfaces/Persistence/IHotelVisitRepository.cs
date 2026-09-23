@@ -13,4 +13,4 @@ public interface IHotelVisitRepository
     Task<IReadOnlyList<TrendingCity>> GetTrendingCitiesAsync(int count, CancellationToken cancellationToken = default);
 }
 
-public record TrendingCity(int CityId, string CityName, int VisitCount);
+public record TrendingCity(int CityId, string CityName, string? ThumbnailUrl, int VisitCount);

@@ -14,7 +14,8 @@ public class GetCitiesQueryHandler(ICityRepository cityRepository)
             await cityRepository.SearchAsync(request.Keyword, request.PageNumber, request.PageSize, cancellationToken);
 
         var items = result.Items
-            .Select(c => new CityDto(c.Id, c.Name, c.Country, c.PostOffice, c.Hotels.Count, c.CreatedAt, c.ModifiedAt))
+            .Select(c => new CityDto(c.Id, c.Name, c.Country, c.PostOffice, c.ThumbnailUrl, c.Hotels.Count, c.CreatedAt,
+                c.ModifiedAt))
             .ToList();
 
         return new PaginatedList<CityDto>(items, result.TotalCount, result.PageNumber, request.PageSize);

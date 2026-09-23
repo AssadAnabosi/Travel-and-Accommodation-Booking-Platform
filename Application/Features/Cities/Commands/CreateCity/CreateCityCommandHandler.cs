@@ -10,12 +10,13 @@ public class CreateCityCommandHandler(ICityRepository cityRepository, IUnitOfWor
 {
     public async Task<CityDto> Handle(CreateCityCommand request, CancellationToken cancellationToken)
     {
-        var city = City.Create(request.Name, request.Country, request.PostOffice);
+        var city = City.Create(request.Name, request.Country, request.PostOffice, request.ThumbnailUrl);
 
         await cityRepository.AddAsync(city, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CityDto(city.Id, city.Name, city.Country, city.PostOffice, HotelsCount: 0, city.CreatedAt,
+        return new CityDto(city.Id, city.Name, city.Country, city.PostOffice, city.ThumbnailUrl, HotelsCount: 0,
+            city.CreatedAt,
             city.ModifiedAt);
     }
 }

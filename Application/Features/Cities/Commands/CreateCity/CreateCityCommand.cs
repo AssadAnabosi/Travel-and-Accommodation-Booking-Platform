@@ -5,4 +5,5 @@ using MediatR;
 namespace Application.Features.Cities.Commands.CreateCity;
 
 [Authorize(Roles = "Admin")]
-public record CreateCityCommand(string Name, string Country, string PostOffice) : IRequest<CityDto>;
+public record CreateCityCommand(string Name, string Country, string PostOffice, string? ThumbnailUrl = null)
+    : IRequest<CityDto>;

@@ -34,6 +34,23 @@ public class UpdateCityCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_SetsThenClearsThumbnail_FullReplaceSemantics()
+    {
+        var city = City.Create("Paris", "France", "75001").WithId(2);
+        _cities.Setup(c => c.GetByIdAsync(2, It.IsAny<CancellationToken>())).ReturnsAsync(city);
+
+        var set = await CreateHandler().Handle(
+            new UpdateCityCommand(2, "Paris", "France", "75001", "https://img.example/paris.jpg"),
+            CancellationToken.None);
+        set.ThumbnailUrl.Should().Be("https://img.example/paris.jpg");
+
+        var cleared = await CreateHandler().Handle(new UpdateCityCommand(2, "Paris", "France", "75001"),
+            CancellationToken.None);
+        cleared.ThumbnailUrl.Should().BeNull();
+        city.ThumbnailUrl.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Handle_CityNotFound_ThrowsNotFound()
     {
         var act = () => CreateHandler().Handle(new UpdateCityCommand(2, "Paris", "France", "75001"),

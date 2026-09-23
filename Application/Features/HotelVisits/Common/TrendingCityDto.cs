@@ -1,3 +1,3 @@
 ﻿namespace Application.Features.HotelVisits.Common;
 
-public record TrendingCityDto(int CityId, string CityName, int VisitCount);
+public record TrendingCityDto(int CityId, string CityName, string? ThumbnailUrl, int VisitCount);

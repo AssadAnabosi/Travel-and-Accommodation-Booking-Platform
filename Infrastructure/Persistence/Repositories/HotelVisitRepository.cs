@@ -45,7 +45,7 @@ public class HotelVisitRepository(AppDbContext context) : IHotelVisitRepository
     {
         // Project the city id (via the hotel) to a scalar first so GROUP BY translates to SQL —
         // grouping directly by the nested navigation key (Hotel.CityId + Hotel.City.Name) can't be
-        // translated. Resolve the city names in a second small query.
+        // translated. Resolve the city names and thumbnails in a second small query.
         var counts = await context.HotelVisits
             .AsNoTracking()
             .Select(v => v.Hotel.CityId)
@@ -59,13 +59,15 @@ public class HotelVisitRepository(AppDbContext context) : IHotelVisitRepository
             return [];
 
         var cityIds = counts.Select(x => x.CityId).ToList();
-        var namesById = await context.Cities
+        var citiesById = await context.Cities
             .AsNoTracking()
             .Where(c => cityIds.Contains(c.Id))
-            .ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
+            .Select(c => new { c.Id, c.Name, c.ThumbnailUrl })
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
 
         return counts
-            .Select(x => new TrendingCity(x.CityId, namesById[x.CityId], x.VisitCount))
+            .Select(x => new TrendingCity(x.CityId, citiesById[x.CityId].Name, citiesById[x.CityId].ThumbnailUrl,
+                x.VisitCount))
             .ToList();
     }
 }

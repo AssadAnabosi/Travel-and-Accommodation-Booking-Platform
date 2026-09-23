@@ -14,12 +14,13 @@ public class UpdateCityCommandHandler(ICityRepository cityRepository, IUnitOfWor
         var city = await cityRepository.GetByIdAsync(request.CityId, cancellationToken)
                    ?? throw new NotFoundException(nameof(City), request.CityId);
 
-        city.Update(request.Name, request.Country, request.PostOffice);
+        city.Update(request.Name, request.Country, request.PostOffice, request.ThumbnailUrl);
 
         cityRepository.Update(city);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CityDto(city.Id, city.Name, city.Country, city.PostOffice, city.Hotels.Count, city.CreatedAt,
+        return new CityDto(city.Id, city.Name, city.Country, city.PostOffice, city.ThumbnailUrl, city.Hotels.Count,
+            city.CreatedAt,
             city.ModifiedAt);
     }
 }

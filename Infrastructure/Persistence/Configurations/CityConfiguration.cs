@@ -14,6 +14,7 @@ public class CityConfiguration : IEntityTypeConfiguration<City>
         builder.Property(c => c.Name).HasMaxLength(150).IsRequired();
         builder.Property(c => c.Country).HasMaxLength(100).IsRequired();
         builder.Property(c => c.PostOffice).HasMaxLength(20).IsRequired();
+        builder.Property(c => c.ThumbnailUrl).HasMaxLength(2048); // optional, same limit as image URLs
         builder.HasIndex(c => new { c.Name, c.Country }).IsUnique();
 
         builder.HasMany(c => c.Hotels).WithOne(h => h.City).HasForeignKey(h => h.CityId)

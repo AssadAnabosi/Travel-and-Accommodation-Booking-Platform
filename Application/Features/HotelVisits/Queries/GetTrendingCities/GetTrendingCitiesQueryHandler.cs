@@ -11,6 +11,6 @@ public class GetTrendingCitiesQueryHandler(IHotelVisitRepository hotelVisitRepos
         CancellationToken cancellationToken)
     {
         var trending = await hotelVisitRepository.GetTrendingCitiesAsync(request.Count, cancellationToken);
-        return trending.Select(t => new TrendingCityDto(t.CityId, t.CityName, t.VisitCount)).ToList();
+        return trending.Select(t => new TrendingCityDto(t.CityId, t.CityName, t.ThumbnailUrl, t.VisitCount)).ToList();
     }
 }

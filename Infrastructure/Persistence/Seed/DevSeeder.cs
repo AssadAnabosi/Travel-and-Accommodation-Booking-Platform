@@ -33,9 +33,10 @@ public static class DevSeeder
         await context.SaveChangesAsync(cancellationToken);
 
         // --- Phase 2: cities + amenities ---
-        var paris = City.Create("Paris", "France", "75001");
-        var tokyo = City.Create("Tokyo", "Japan", "100-0001");
-        var newYork = City.Create("New York", "United States", "10001");
+        var paris = City.Create("Paris", "France", "75001", "https://picsum.photos/seed/city-paris/800/600");
+        var tokyo = City.Create("Tokyo", "Japan", "100-0001", "https://picsum.photos/seed/city-tokyo/800/600");
+        var newYork = City.Create("New York", "United States", "10001",
+            "https://picsum.photos/seed/city-newyork/800/600");
         context.Cities.AddRange(paris, tokyo, newYork);
 
         var wifi = Amenity.Create("Free WiFi");
