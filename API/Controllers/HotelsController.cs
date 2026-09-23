@@ -107,11 +107,12 @@ public class HotelsController(ISender sender) : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Approves a pending hotel, making it publicly visible.</summary>
+    /// <summary>Approves a pending hotel, making it publicly visible; 409 if already approved.</summary>
     [Authorize(Roles = "Admin")]
     [HttpPost("{id:int}/approve")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
     {
         await sender.Send(new ApproveHotelCommand(id), cancellationToken);

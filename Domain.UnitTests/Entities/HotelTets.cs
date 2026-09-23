@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
+using Domain.Exceptions;
 using FluentAssertions;
 
 namespace Domain.UnitTests.Entities;
@@ -69,7 +70,7 @@ public class HotelTests
 
         var act = () => hotel.Approve();
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 
     [Fact]
@@ -111,7 +112,7 @@ public class HotelTests
 
         var act = () => hotel.Resubmit();
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 
     [Fact]
@@ -145,7 +146,7 @@ public class HotelTests
 
         var act = () => hotel.RemoveImage(999);
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<ImageNotFoundException>();
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Exceptions;
 
 namespace Domain.Entities;
 
@@ -33,7 +34,7 @@ public class RefreshToken : BaseEntity<Guid>
     public void Revoke()
     {
         if (IsRevoked)
-            throw new InvalidOperationException("Refresh token has already been revoked.");
+            throw new InvalidStateTransitionException("Refresh token has already been revoked.");
 
         RevokedAt = DateTime.UtcNow;
     }

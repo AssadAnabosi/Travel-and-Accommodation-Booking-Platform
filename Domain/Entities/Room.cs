@@ -101,7 +101,7 @@ public class Room : AuditableEntity<int>
     public void Unblock(RoomAvailability availability)
     {
         if (availability.Status != AvailabilityStatus.Blocked)
-            throw new InvalidOperationException(
+            throw new InvalidStateTransitionException(
                 "Only a manually blocked range can be unblocked directly — bookings must be cancelled instead.");
 
         _availabilities.Remove(availability);
@@ -118,7 +118,7 @@ public class Room : AuditableEntity<int>
     public void RemoveImage(int imageId)
     {
         var image = _images.FirstOrDefault(i => i.Id == imageId)
-                    ?? throw new InvalidOperationException($"Image {imageId} does not belong to this room.");
+                    ?? throw new ImageNotFoundException(imageId, "room");
         _images.Remove(image);
     }
 
@@ -126,11 +126,11 @@ public class Room : AuditableEntity<int>
     /// Frees the original number for reuse by a genuinely new room, while the mangled
     /// value keeps this row uniquely identifiable in historical Booking/Discount records.
     /// </summary>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidStateTransitionException">The room is already inactive.</exception>
     public void MarkDeleted()
     {
         if (!IsActive)
-            throw new InvalidOperationException("Room is already inactive.");
+            throw new InvalidStateTransitionException("Room is already inactive.");
 
         IsActive = false;
         Number = $"{Number}::deleted::{Guid.NewGuid():N}";

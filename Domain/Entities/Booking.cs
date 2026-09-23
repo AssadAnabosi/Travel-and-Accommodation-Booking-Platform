@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -50,7 +51,7 @@ public class Booking : AuditableEntity<Guid>
     public void Confirm()
     {
         if (Status != BookingStatus.Pending)
-            throw new InvalidOperationException($"Cannot confirm a booking in status {Status}.");
+            throw new InvalidStateTransitionException($"Cannot confirm a booking in status {Status}.");
         Status = BookingStatus.Confirmed;
         ModifiedAt = DateTime.UtcNow;
     }
@@ -58,7 +59,7 @@ public class Booking : AuditableEntity<Guid>
     public void CheckIn()
     {
         if (Status != BookingStatus.Confirmed)
-            throw new InvalidOperationException($"Cannot check in a booking in status {Status}.");
+            throw new InvalidStateTransitionException($"Cannot check in a booking in status {Status}.");
         Status = BookingStatus.CheckedIn;
         ModifiedAt = DateTime.UtcNow;
     }
@@ -66,7 +67,7 @@ public class Booking : AuditableEntity<Guid>
     public void CheckOut()
     {
         if (Status != BookingStatus.CheckedIn)
-            throw new InvalidOperationException($"Cannot check out a booking in status {Status}.");
+            throw new InvalidStateTransitionException($"Cannot check out a booking in status {Status}.");
         Status = BookingStatus.CheckedOut;
         ModifiedAt = DateTime.UtcNow;
     }
@@ -74,7 +75,7 @@ public class Booking : AuditableEntity<Guid>
     public void Cancel()
     {
         if (Status is BookingStatus.CheckedOut or BookingStatus.Cancelled)
-            throw new InvalidOperationException($"Cannot cancel a booking in status {Status}.");
+            throw new InvalidStateTransitionException($"Cannot cancel a booking in status {Status}.");
         Status = BookingStatus.Cancelled;
         ModifiedAt = DateTime.UtcNow;
     }

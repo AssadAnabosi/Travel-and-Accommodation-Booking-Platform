@@ -46,7 +46,8 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService
         ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
         PaymentFailedException => (StatusCodes.Status402PaymentRequired, "Payment required"),
         // Domain rule violations carry safe, user-facing messages too.
-        RoomNotAvailableException => (StatusCodes.Status409Conflict, "Conflict"),
+        RoomNotAvailableException or InvalidStateTransitionException => (StatusCodes.Status409Conflict, "Conflict"),
+        ImageNotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
         DomainException => (StatusCodes.Status400BadRequest, "Business rule violation"),
         _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
     };

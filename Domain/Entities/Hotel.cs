@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Enums;
+using Domain.Exceptions;
 
 namespace Domain.Entities;
 
@@ -100,14 +101,14 @@ public class Hotel : AuditableEntity<int>
     public void RemoveImage(int imageId)
     {
         var image = _images.FirstOrDefault(i => i.Id == imageId)
-                    ?? throw new InvalidOperationException($"Image {imageId} does not belong to this hotel.");
+                    ?? throw new ImageNotFoundException(imageId, "hotel");
         _images.Remove(image);
     }
 
     public void Approve()
     {
         if (ApprovalStatus == HotelApprovalStatus.Approved)
-            throw new InvalidOperationException("Hotel is already approved.");
+            throw new InvalidStateTransitionException("Hotel is already approved.");
 
         ApprovalStatus = HotelApprovalStatus.Approved;
         RejectionReason = null;
@@ -124,7 +125,7 @@ public class Hotel : AuditableEntity<int>
     public void Resubmit()
     {
         if (ApprovalStatus != HotelApprovalStatus.Rejected)
-            throw new InvalidOperationException("Only a rejected hotel can be resubmitted for review.");
+            throw new InvalidStateTransitionException("Only a rejected hotel can be resubmitted for review.");
 
         ApprovalStatus = HotelApprovalStatus.Pending;
         RejectionReason = null;

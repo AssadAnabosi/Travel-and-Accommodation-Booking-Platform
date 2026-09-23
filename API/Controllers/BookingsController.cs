@@ -41,22 +41,24 @@ public class BookingsController(ISender sender) : ControllerBase
         Guid id, ConfirmBookingCommand command, CancellationToken cancellationToken)
         => Ok(await sender.Send(command with { BookingId = id }, cancellationToken));
 
-    /// <summary>Checks a confirmed booking in (hotel owner or admin).</summary>
+    /// <summary>Checks a confirmed booking in (hotel owner or admin); 409 if it isn't confirmed.</summary>
     [Authorize(Roles = "Admin,HotelOwner")]
     [HttpPost("{id:guid}/check-in")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CheckIn(Guid id, CancellationToken cancellationToken)
     {
         await sender.Send(new CheckInBookingCommand(id), cancellationToken);
         return NoContent();
     }
 
-    /// <summary>Checks a checked-in booking out (hotel owner or admin).</summary>
+    /// <summary>Checks a checked-in booking out (hotel owner or admin); 409 if it isn't checked in.</summary>
     [Authorize(Roles = "Admin,HotelOwner")]
     [HttpPost("{id:guid}/check-out")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CheckOut(Guid id, CancellationToken cancellationToken)
     {
         await sender.Send(new CheckOutBookingCommand(id), cancellationToken);

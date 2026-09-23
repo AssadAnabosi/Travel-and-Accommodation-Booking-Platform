@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Exceptions;
 using FluentAssertions;
 
 namespace Domain.UnitTests.Entities;
@@ -46,6 +47,6 @@ public class RefreshTokenTests
 
         var act = () => token.Revoke();
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 }

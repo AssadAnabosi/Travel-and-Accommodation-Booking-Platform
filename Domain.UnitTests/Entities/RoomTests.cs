@@ -140,7 +140,7 @@ public class RoomTests
 
         var act = () => room.Unblock(availability);
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 
     [Fact]
@@ -168,6 +168,6 @@ public class RoomTests
 
         var act = () => room.MarkDeleted();
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 }

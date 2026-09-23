@@ -26,7 +26,7 @@ public class ReviewsController(ISender sender) : ControllerBase
         CancellationToken cancellationToken = default)
         => Ok(await sender.Send(new GetReviewsByHotelQuery(hotelId, pageNumber, pageSize), cancellationToken));
 
-    /// <summary>Reviews a hotel after a completed stay (403 without one); 409 on a second review.</summary>
+    /// <summary>Reviews a hotel after a completed stay; 400 without one or if already reviewed (409 only on a concurrent duplicate).</summary>
     [Authorize]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]

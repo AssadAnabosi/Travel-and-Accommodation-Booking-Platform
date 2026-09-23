@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.ValueObjects;
 using FluentAssertions;
 
@@ -61,7 +62,7 @@ public class BookingTests
 
         var act = booking.Confirm;
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 
     [Fact]
@@ -69,7 +70,7 @@ public class BookingTests
     {
         var act = () => NewBooking().CheckIn();
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 
     [Fact]
@@ -80,7 +81,7 @@ public class BookingTests
 
         var act = booking.CheckOut;
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 
     [Fact]
@@ -103,6 +104,6 @@ public class BookingTests
 
         var act = booking.Cancel;
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<InvalidStateTransitionException>();
     }
 }

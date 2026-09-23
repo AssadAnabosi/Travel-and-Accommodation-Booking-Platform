@@ -49,10 +49,11 @@ public class RoomsController(ISender sender) : ControllerBase
     public async Task<ActionResult<RoomDto>> Update(int id, UpdateRoomCommand command, CancellationToken cancellationToken)
         => Ok(await sender.Send(command with { RoomId = id }, cancellationToken));
 
-    /// <summary>Deletes a room — soft delete if it has any booking history, hard delete otherwise.</summary>
+    /// <summary>Deletes a room — soft delete if it has any booking history, hard delete otherwise; 409 if already deleted.</summary>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteRoomCommand(id), cancellationToken);
@@ -71,10 +72,11 @@ public class RoomsController(ISender sender) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id }, new { availabilityId });
     }
 
-    /// <summary>Removes an availability block from a room.</summary>
+    /// <summary>Removes an availability block from a room; 409 if the range is held by a booking, not a manual block.</summary>
     [HttpDelete("{id:int}/availability/{availabilityId:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UnblockAvailability(
         int id, int availabilityId, CancellationToken cancellationToken)
     {
