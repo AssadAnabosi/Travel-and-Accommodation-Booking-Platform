@@ -131,6 +131,9 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
     public async Task<bool> HasRoomsAsync(int hotelId, CancellationToken cancellationToken = default) =>
         await context.Rooms.AnyAsync(r => r.HotelId == hotelId, cancellationToken);
 
+    public async Task<int> CountRoomsAsync(int hotelId, CancellationToken cancellationToken = default) =>
+        await context.Rooms.CountAsync(r => r.HotelId == hotelId, cancellationToken);
+
     public async Task<PaginatedList<Hotel>> GetByOwnerIdAsync(Guid ownerId, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default)
     {
@@ -159,6 +162,36 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .OrderBy(h => h.CreatedAt);
 
         return await PaginateAsync(query, pageNumber, pageSize, cancellationToken);
+    }
+
+    public async Task<PaginatedList<Hotel>> GetAllForAdminAsync(HotelAdminFilter filter, int pageNumber,
+        int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = context.Hotels.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filter.Keyword))
+            query = query.Where(h => h.Name.Contains(filter.Keyword)
+                                     || h.Address.Contains(filter.Keyword)
+                                     || h.City.Name.Contains(filter.Keyword));
+
+        if (filter.CityId.HasValue)
+            query = query.Where(h => h.CityId == filter.CityId.Value);
+
+        if (filter.ApprovalStatus.HasValue)
+            query = query.Where(h => h.ApprovalStatus == filter.ApprovalStatus.Value);
+
+        if (filter.OwnerId.HasValue)
+            query = query.Where(h => h.OwnerId == filter.OwnerId.Value);
+
+        var ordered = query
+            .AsSplitQuery()
+            .Include(h => h.City)
+            .Include(h => h.Owner)
+            .Include(h => h.Rooms)
+            .OrderByDescending(h => h.CreatedAt)
+            .ThenBy(h => h.Id);
+
+        return await PaginateAsync(ordered, pageNumber, pageSize, cancellationToken);
     }
 
     private static async Task<PaginatedList<Hotel>> PaginateAsync(IQueryable<Hotel> query, int pageNumber,

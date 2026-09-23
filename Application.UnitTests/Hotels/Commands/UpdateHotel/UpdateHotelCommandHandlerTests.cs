@@ -65,6 +65,21 @@ public class UpdateHotelCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ReturnsRoomsCountFromTheRepository_NotTheUnloadedNavigation()
+    {
+        // Regression: GetByIdAsync doesn't load Rooms, so hotel.Rooms.Count was always 0 in the response.
+        var hotel = Hotel.CreateByOwner("Grand", 5, "d", "addr", 1.0, 2.0, 1, Guid.NewGuid());
+        _currentUser.Setup(c => c.IsInRole("Admin")).Returns(true);
+        _hotels.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(hotel);
+        _hotels.Setup(r => r.CountRoomsAsync(hotel.Id, It.IsAny<CancellationToken>())).ReturnsAsync(3);
+
+        var result = await CreateHandler().Handle(Command(), CancellationToken.None);
+
+        hotel.Rooms.Should().BeEmpty();
+        result.RoomsCount.Should().Be(3);
+    }
+
+    [Fact]
     public async Task Handle_NotOwnerNotAdmin_ThrowsForbidden()
     {
         var hotel = Hotel.CreateByOwner("Grand", 5, "d", "addr", 1.0, 2.0, 1, Guid.NewGuid());

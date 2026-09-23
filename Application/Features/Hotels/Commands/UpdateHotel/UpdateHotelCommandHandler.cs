@@ -40,11 +40,13 @@ public class UpdateHotelCommandHandler(
 
         var city = await cityRepository.GetByIdAsync(hotel.CityId, cancellationToken);
         var owner = await userRepository.GetByIdAsync(hotel.OwnerId, cancellationToken);
+        // Rooms isn't loaded here (hotel.Rooms.Count would always be 0), so count them in the database.
+        var roomsCount = await hotelRepository.CountRoomsAsync(hotel.Id, cancellationToken);
 
         return new HotelDto(hotel.Id, hotel.Name, hotel.StarRating, hotel.Description, hotel.Address, hotel.Latitude,
             hotel.Longitude, hotel.CityId, city!.Name,
             hotel.OwnerId, $"{owner!.FirstName} {owner.LastName}", hotel.ApprovalStatus.ToString(),
             hotel.RejectionReason,
-            hotel.Rooms.Count, hotel.CreatedAt, hotel.ModifiedAt);
+            roomsCount, hotel.CreatedAt, hotel.ModifiedAt);
     }
 }

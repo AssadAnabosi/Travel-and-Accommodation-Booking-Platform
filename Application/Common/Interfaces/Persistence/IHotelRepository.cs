@@ -36,9 +36,21 @@ public interface IHotelRepository : IRepository<Hotel, int>
     /// <summary>True if any room row (active or soft-deleted) still belongs to the hotel.</summary>
     Task<bool> HasRoomsAsync(int hotelId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Number of room rows (active or soft-deleted) belonging to the hotel — the same count the
+    /// list endpoints' <c>RoomsCount</c> reports via the eager-loaded Rooms collection.
+    /// </summary>
+    Task<int> CountRoomsAsync(int hotelId, CancellationToken cancellationToken = default);
+
     Task<PaginatedList<Hotel>> GetByOwnerIdAsync(Guid ownerId, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
 
     Task<PaginatedList<Hotel>> GetPendingApprovalAsync(int pageNumber, int pageSize,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Every hotel regardless of approval status (admin grid), newest first.
+    /// </summary>
+    Task<PaginatedList<Hotel>> GetAllForAdminAsync(HotelAdminFilter filter, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
 }

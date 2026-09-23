@@ -3,6 +3,7 @@ using Application.Features.Hotels.Commands.AddHotelImage;
 using Application.Features.Hotels.Commands.ApproveHotel;
 using Application.Features.Hotels.Commands.CreateHotel;
 using Application.Features.Hotels.Commands.DeleteHotel;
+using Application.Features.Hotels.Commands.ReassignHotelOwner;
 using Application.Features.Hotels.Commands.RejectHotel;
 using Application.Features.Hotels.Commands.RemoveHotelImage;
 using Application.Features.Hotels.Commands.UpdateHotel;
@@ -11,6 +12,7 @@ using Application.Features.Hotels.Common;
 using Application.Features.Hotels.Queries.GetFeaturedDeals;
 using Application.Features.Hotels.Queries.GetHotelById;
 using Application.Features.Hotels.Queries.GetHotelDetail;
+using Application.Features.Hotels.Queries.GetHotels;
 using Application.Features.Hotels.Queries.GetMyHotels;
 using Application.Features.Hotels.Queries.GetPendingHotels;
 using Application.Features.Hotels.Queries.SearchHotels;
@@ -58,6 +60,14 @@ public class HotelsController(ISender sender) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<PaginatedList<HotelDto>>> GetMine(
         [FromQuery] GetMyHotelsQuery query, CancellationToken cancellationToken)
+        => Ok(await sender.Send(query, cancellationToken));
+
+    /// <summary>Lists every hotel in any approval state for the admin grid (paginated; filter by keyword, city, status, owner).</summary>
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedList<HotelDto>>> GetAll(
+        [FromQuery] GetHotelsQuery query, CancellationToken cancellationToken)
         => Ok(await sender.Send(query, cancellationToken));
 
     /// <summary>Lists hotels awaiting approval (paginated).</summary>
@@ -125,6 +135,18 @@ public class HotelsController(ISender sender) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Reject(int id, RejectHotelCommand command, CancellationToken cancellationToken)
+    {
+        await sender.Send(command with { HotelId = id }, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>Reassigns a hotel to another owner (Admin); 400 unless the new owner is an active HotelOwner.</summary>
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{id:int}/owner")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReassignOwner(
+        int id, ReassignHotelOwnerCommand command, CancellationToken cancellationToken)
     {
         await sender.Send(command with { HotelId = id }, cancellationToken);
         return NoContent();
