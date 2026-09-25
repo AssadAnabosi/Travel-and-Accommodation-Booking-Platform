@@ -35,6 +35,6 @@ public class CreateHotelCommandHandler(
             hotel.Longitude, hotel.CityId, city!.Name,
             hotel.OwnerId, $"{owner!.FirstName} {owner.LastName}", hotel.ApprovalStatus.ToString(),
             hotel.RejectionReason,
-            RoomsCount: 0, hotel.CreatedAt, hotel.ModifiedAt);
+            RoomsCount: 0, hotel.CreatedAt, hotel.ModifiedAt, AmenityIds: []);
     }
 }

@@ -19,7 +19,8 @@ public class GetMyHotelsQueryHandler(IHotelRepository hotelRepository, ICurrentU
             h.Id, h.Name, h.StarRating, h.Description, h.Address, h.Latitude, h.Longitude, h.CityId,
             h.City.Name,
             h.OwnerId, $"{h.Owner.FirstName} {h.Owner.LastName}",
-            h.ApprovalStatus.ToString(), h.RejectionReason, h.Rooms.Count, h.CreatedAt, h.ModifiedAt)).ToList();
+            h.ApprovalStatus.ToString(), h.RejectionReason, h.Rooms.Count, h.CreatedAt, h.ModifiedAt,
+            h.HotelAmenities.Select(ha => ha.AmenityId).ToList())).ToList();
 
         return new PaginatedList<HotelDto>(items, result.TotalCount, result.PageNumber, request.PageSize);
     }

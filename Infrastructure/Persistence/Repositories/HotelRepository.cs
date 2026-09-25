@@ -144,6 +144,7 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .Include(h => h.City)
             .Include(h => h.Owner)
             .Include(h => h.Rooms)
+            .Include(h => h.HotelAmenities)
             .OrderBy(h => h.Name);
 
         return await PaginateAsync(query, pageNumber, pageSize, cancellationToken);
@@ -159,6 +160,7 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .Include(h => h.City)
             .Include(h => h.Owner)
             .Include(h => h.Rooms)
+            .Include(h => h.HotelAmenities)
             .OrderBy(h => h.CreatedAt);
 
         return await PaginateAsync(query, pageNumber, pageSize, cancellationToken);
@@ -188,6 +190,7 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
             .Include(h => h.City)
             .Include(h => h.Owner)
             .Include(h => h.Rooms)
+            .Include(h => h.HotelAmenities)
             .OrderByDescending(h => h.CreatedAt)
             .ThenBy(h => h.Id);
 

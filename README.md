@@ -370,6 +370,9 @@ Client explicitly calls RecordHotelVisitCommand(HotelId) after viewing a hotel's
 - **EF loading rules** (the cause of most past bugs): repository reads use `AsNoTracking`; a DTO must only read
   navigations its repository method eager-loads; a mutation that changes a **collection** (images, amenities)
   must load the entity **tracked** (e.g. `GetByIdWithImagesTrackedAsync`) and rely on change tracking, not `Update()`.
+  `HotelDto.AmenityIds` (the amenities-editor prefill) is why every `HotelDto` source includes `HotelAmenities`:
+  the list methods (`GetByOwnerIdAsync`, `GetPendingApprovalAsync`, `GetAllForAdminAsync`) include it, and
+  `UpdateHotel` loads via `GetByIdWithAmenitiesTrackedAsync` so its response carries the current set.
 - Domain state guards throw `InvalidStateTransitionException` (→ 409), **not** `InvalidOperationException`, which is
   deliberately left unmapped (→ 500) because EF and the framework throw it for real bugs.
 - Room deletion is soft-delete-with-history (mangled `Number`) when any booking exists; hard delete only when never

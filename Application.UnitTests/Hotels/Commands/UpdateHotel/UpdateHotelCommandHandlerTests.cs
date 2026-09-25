@@ -42,7 +42,7 @@ public class UpdateHotelCommandHandlerTests
         var ownerId = Guid.NewGuid();
         _currentUser.Setup(c => c.IsInRole("Admin")).Returns(false);
         _currentUser.Setup(c => c.UserId).Returns(ownerId);
-        _hotels.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _hotels.Setup(r => r.GetByIdWithAmenitiesTrackedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RejectedHotelOwnedBy(ownerId));
 
         var result = await CreateHandler().Handle(Command(), CancellationToken.None);
@@ -56,7 +56,7 @@ public class UpdateHotelCommandHandlerTests
     public async Task Handle_AdminEditsRejectedHotel_StaysRejected()
     {
         _currentUser.Setup(c => c.IsInRole("Admin")).Returns(true);
-        _hotels.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _hotels.Setup(r => r.GetByIdWithAmenitiesTrackedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RejectedHotelOwnedBy(Guid.NewGuid()));
 
         var result = await CreateHandler().Handle(Command(), CancellationToken.None);
@@ -67,10 +67,10 @@ public class UpdateHotelCommandHandlerTests
     [Fact]
     public async Task Handle_ReturnsRoomsCountFromTheRepository_NotTheUnloadedNavigation()
     {
-        // Regression: GetByIdAsync doesn't load Rooms, so hotel.Rooms.Count was always 0 in the response.
+        // Regression: the hotel load doesn't include Rooms, so hotel.Rooms.Count was always 0 in the response.
         var hotel = Hotel.CreateByOwner("Grand", 5, "d", "addr", 1.0, 2.0, 1, Guid.NewGuid());
         _currentUser.Setup(c => c.IsInRole("Admin")).Returns(true);
-        _hotels.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(hotel);
+        _hotels.Setup(r => r.GetByIdWithAmenitiesTrackedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(hotel);
         _hotels.Setup(r => r.CountRoomsAsync(hotel.Id, It.IsAny<CancellationToken>())).ReturnsAsync(3);
 
         var result = await CreateHandler().Handle(Command(), CancellationToken.None);
@@ -80,12 +80,26 @@ public class UpdateHotelCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ReturnsTheHotelsAmenityIds()
+    {
+        var hotel = Hotel.CreateByOwner("Grand", 5, "d", "addr", 1.0, 2.0, 1, Guid.NewGuid());
+        hotel.SetAmenities([2, 7]);
+        _currentUser.Setup(c => c.IsInRole("Admin")).Returns(true);
+        _hotels.Setup(r => r.GetByIdWithAmenitiesTrackedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(hotel);
+
+        var result = await CreateHandler().Handle(Command(), CancellationToken.None);
+
+        result.AmenityIds.Should().BeEquivalentTo([2, 7]);
+    }
+
+    [Fact]
     public async Task Handle_NotOwnerNotAdmin_ThrowsForbidden()
     {
         var hotel = Hotel.CreateByOwner("Grand", 5, "d", "addr", 1.0, 2.0, 1, Guid.NewGuid());
         _currentUser.Setup(c => c.IsInRole("Admin")).Returns(false);
         _currentUser.Setup(c => c.UserId).Returns(Guid.NewGuid());
-        _hotels.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(hotel);
+        _hotels.Setup(r => r.GetByIdWithAmenitiesTrackedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(hotel);
 
         var act = () => CreateHandler().Handle(Command(), CancellationToken.None);
 
@@ -97,7 +111,7 @@ public class UpdateHotelCommandHandlerTests
     public async Task Handle_HotelNotFound_ThrowsNotFound()
     {
         _currentUser.Setup(c => c.IsInRole("Admin")).Returns(true);
-        _hotels.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync((Hotel?)null);
+        _hotels.Setup(r => r.GetByIdWithAmenitiesTrackedAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync((Hotel?)null);
 
         var act = () => CreateHandler().Handle(Command(), CancellationToken.None);
 

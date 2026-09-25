@@ -22,6 +22,6 @@ public class GetHotelByIdQueryHandler(IHotelRepository hotelRepository, ICurrent
             hotel.Longitude, hotel.CityId, hotel.City.Name,
             hotel.OwnerId, $"{hotel.Owner.FirstName} {hotel.Owner.LastName}",
             hotel.ApprovalStatus.ToString(), hotel.RejectionReason, hotel.Rooms.Count, hotel.CreatedAt,
-            hotel.ModifiedAt);
+            hotel.ModifiedAt, hotel.HotelAmenities.Select(ha => ha.AmenityId).ToList());
     }
 }

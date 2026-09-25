@@ -16,4 +16,5 @@ public record HotelDto(
     string? RejectionReason,
     int RoomsCount,
     DateTime CreatedAt,
-    DateTime? ModifiedAt);
+    DateTime? ModifiedAt,
+    IReadOnlyList<int> AmenityIds);

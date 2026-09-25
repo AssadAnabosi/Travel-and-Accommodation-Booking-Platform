@@ -18,7 +18,8 @@ public class UpdateHotelCommandHandler(
 {
     public async Task<HotelDto> Handle(UpdateHotelCommand request, CancellationToken cancellationToken)
     {
-        var hotel = await hotelRepository.GetByIdAsync(request.HotelId, cancellationToken)
+        // Amenity links are loaded so the response's AmenityIds reflects the hotel (the update itself doesn't touch them).
+        var hotel = await hotelRepository.GetByIdWithAmenitiesTrackedAsync(request.HotelId, cancellationToken)
                     ?? throw new NotFoundException(nameof(Hotel), request.HotelId);
 
         var isAdmin = currentUserService.IsInRole("Admin");
@@ -47,6 +48,6 @@ public class UpdateHotelCommandHandler(
             hotel.Longitude, hotel.CityId, city!.Name,
             hotel.OwnerId, $"{owner!.FirstName} {owner.LastName}", hotel.ApprovalStatus.ToString(),
             hotel.RejectionReason,
-            roomsCount, hotel.CreatedAt, hotel.ModifiedAt);
+            roomsCount, hotel.CreatedAt, hotel.ModifiedAt, hotel.HotelAmenities.Select(ha => ha.AmenityId).ToList());
     }
 }

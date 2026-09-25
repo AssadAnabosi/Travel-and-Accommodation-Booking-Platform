@@ -20,6 +20,7 @@ public class GetHotelByIdQueryHandlerTests
         var pending = TestData.Hotel(_ownerId, approved: false, name: "Grand", id: 1, cityName: "Paris");
         TestData.RoomIn(pending, id: 1);
         TestData.RoomIn(pending, id: 2);
+        pending.SetAmenities([3, 5]);
         _hotels.Setup(h => h.GetByIdWithDetailsAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(pending);
     }
 
@@ -40,6 +41,7 @@ public class GetHotelByIdQueryHandlerTests
         dto.OwnerId.Should().Be(_ownerId);
         dto.OwnerName.Should().Be("Olivia Owner");
         dto.RoomsCount.Should().Be(2);
+        dto.AmenityIds.Should().BeEquivalentTo([3, 5]);
         _hotels.Verify(h => h.GetByIdWithDetailsAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
