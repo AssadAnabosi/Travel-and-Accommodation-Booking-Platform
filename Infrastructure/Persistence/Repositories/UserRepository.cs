@@ -10,6 +10,14 @@ public class UserRepository(AppDbContext context) : IUserRepository
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
+    public async Task<UserWithCounts?> GetByIdWithCountsAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .Select(u => new UserWithCounts(u, u.OwnedHotels.Count, u.Bookings.Count))
+            .FirstOrDefaultAsync(cancellationToken);
+
+
     public async Task AddAsync(User entity, CancellationToken cancellationToken = default) =>
         await context.Users.AddAsync(entity, cancellationToken);
 

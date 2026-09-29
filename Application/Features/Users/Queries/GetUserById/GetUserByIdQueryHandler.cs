@@ -9,12 +9,13 @@ public class GetUserByIdQueryHandler(IUserRepository userRepository) : IRequestH
 {
     public async Task<UserDetailsDto> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken)
-                   ?? throw new NotFoundException(nameof(User), request.UserId);
+        var result = await userRepository.GetByIdWithCountsAsync(request.UserId, cancellationToken)
+                     ?? throw new NotFoundException(nameof(User), request.UserId);
 
+        var user = result.User;
         return new UserDetailsDto(
             user.Id, user.Email, user.FirstName, user.LastName,
             user.Role.ToString(), user.IsActive, user.CreatedAt, user.ModifiedAt,
-            user.OwnedHotels.Count, user.Bookings.Count);
+            result.OwnedHotelsCount, result.BookingsCount);
     }
 }

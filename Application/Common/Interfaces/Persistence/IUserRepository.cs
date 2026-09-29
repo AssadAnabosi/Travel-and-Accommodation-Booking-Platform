@@ -17,4 +17,8 @@ public interface IUserRepository : IRepository<User, Guid>
 
     Task<PaginatedList<User>> SearchAsync(UserSearchFilter filter, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
+
+    // Loads a user with its OwnedHotels/Bookings counts via a single projection query,
+    // so the collections themselves are never materialized just to be counted.
+    Task<UserWithCounts?> GetByIdWithCountsAsync(Guid id, CancellationToken cancellationToken = default);
 }

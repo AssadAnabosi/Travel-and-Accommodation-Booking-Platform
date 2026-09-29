@@ -1,7 +1,7 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces.Persistence;
+using Application.Common.Models;
 using Application.Features.Users.Queries.GetUserById;
-using Application.UnitTests.TestSupport;
 using Domain.Entities;
 using Domain.Enums;
 using FluentAssertions;
@@ -17,11 +17,9 @@ public class GetUserByIdQueryHandlerTests
     public async Task Handle_ExistingUser_MapsDetailsWithOwnedHotelAndBookingCounts()
     {
         var user = User.Create("owner@tabp.dev", "hash", "Olivia", "Owner", UserRole.HotelOwner);
-        var room = TestData.RoomIn(TestData.Hotel(user.Id));
-        user.WithItems("_ownedHotels", room.Hotel, TestData.Hotel(user.Id, id: 2))
-            .WithItems("_bookings", TestData.BookingFor(user, room));
         user.Deactivate();
-        _users.Setup(u => u.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _users.Setup(u => u.GetByIdWithCountsAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserWithCounts(user, OwnedHotelsCount: 2, BookingsCount: 1));
 
         var dto = await new GetUserByIdQueryHandler(_users.Object)
             .Handle(new GetUserByIdQuery(user.Id), CancellationToken.None);
