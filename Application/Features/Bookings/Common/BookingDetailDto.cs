@@ -4,6 +4,7 @@ public record BookingDetailDto(
     Guid Id,
     string ConfirmationNumber,
     string Status,
+    int HotelId,
     string HotelName,
     string HotelAddress,
     string RoomNumber,

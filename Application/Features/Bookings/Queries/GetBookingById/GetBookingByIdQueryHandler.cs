@@ -24,7 +24,7 @@ public class GetBookingByIdQueryHandler(IBookingRepository bookingRepository, IC
 
         return new BookingDetailDto(
             booking.Id, booking.ConfirmationNumber, booking.Status.ToString(),
-            booking.Room.Hotel.Name, booking.Room.Hotel.Address, booking.Room.Number, booking.Room.RoomType.ToString(),
+            booking.Room.Hotel.Id, booking.Room.Hotel.Name, booking.Room.Hotel.Address, booking.Room.Number, booking.Room.RoomType.ToString(),
             booking.StayRange.StartDate, booking.StayRange.EndDate, booking.StayRange.Nights,
             booking.Adults, booking.Children, booking.TotalPrice.Amount, booking.TotalPrice.Currency,
             booking.SpecialRequests, booking.CreatedAt);
