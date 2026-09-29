@@ -71,8 +71,13 @@ public class Room : AuditableEntity<int>
 
     public Money GetActivePrice(DateOnly onDate)
     {
-        var activeDiscount = _discounts.FirstOrDefault(d => d.IsActiveOn(onDate));
-        return activeDiscount is null ? BasePrice : activeDiscount.ApplyTo(BasePrice);
+        // Multiple discounts may be active on the same date; apply the one that
+        // yields the lowest price for the guest rather than an arbitrary first match.
+        return _discounts
+            .Where(d => d.IsActiveOn(onDate))
+            .Select(d => d.ApplyTo(BasePrice))
+            .DefaultIfEmpty(BasePrice)
+            .MinBy(price => price.Amount)!;
     }
 
     public RoomAvailability Reserve(DateRange range, Guid bookingId)

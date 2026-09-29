@@ -1,4 +1,6 @@
-﻿using Domain.Entities;
+﻿using System.Collections;
+using System.Reflection;
+using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.ValueObjects;
@@ -11,6 +13,15 @@ public class RoomTests
     private static DateOnly D(int day) => new(2026, 1, day);
     private static DateRange Range(int start, int end) => DateRange.Of(D(start), D(end));
     private static Room NewRoom() => Room.Create(1, "101", RoomType.Standard, 2, 1, Money.Of(200m));
+
+    private static Room WithDiscount(Room room, Discount discount)
+    {
+        var list = (IList)typeof(Room)
+            .GetField("_discounts", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(room)!;
+        list.Add(discount);
+        return room;
+    }
 
     [Fact]
     public void Create_SetsProperties_AndIsActive()
@@ -147,6 +158,36 @@ public class RoomTests
     public void GetActivePrice_NoDiscounts_ReturnsBasePrice()
     {
         NewRoom().GetActivePrice(D(12)).Should().Be(Money.Of(200m));
+    }
+
+    [Fact]
+    public void GetActivePrice_SingleActiveDiscount_AppliesIt()
+    {
+        var room = NewRoom();
+        WithDiscount(room, Discount.Create(room.Id, "Deal", DiscountType.Percentage, 25m, D(10), D(20)));
+
+        room.GetActivePrice(D(12)).Should().Be(Money.Of(150m)); // 200 - 25%
+    }
+
+    [Fact]
+    public void GetActivePrice_MultipleOverlappingDiscounts_AppliesTheOneWithLowestPrice()
+    {
+        var room = NewRoom();
+        WithDiscount(room, Discount.Create(room.Id, "10% off", DiscountType.Percentage, 10m, D(10), D(20))); // 180
+        WithDiscount(room, Discount.Create(room.Id, "$60 off", DiscountType.FixedAmount, 60m, D(10), D(20))); // 140
+        WithDiscount(room, Discount.Create(room.Id, "25% off", DiscountType.Percentage, 25m, D(10), D(20))); // 150
+
+        room.GetActivePrice(D(12)).Should().Be(Money.Of(140m)); // best deal for the guest, regardless of list order
+    }
+
+    [Fact]
+    public void GetActivePrice_IgnoresDiscountsNotActiveOnTheDate()
+    {
+        var room = NewRoom();
+        WithDiscount(room, Discount.Create(room.Id, "Bigger but expired", DiscountType.FixedAmount, 80m, D(1), D(5)));
+        WithDiscount(room, Discount.Create(room.Id, "Smaller but active", DiscountType.FixedAmount, 30m, D(10), D(20)));
+
+        room.GetActivePrice(D(12)).Should().Be(Money.Of(170m)); // only the active discount counts
     }
 
     [Fact]
