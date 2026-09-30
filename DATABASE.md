@@ -101,16 +101,19 @@ deleted, and the restrict FKs above mean a user with any history cannot be hard-
 
 Rotating refresh tokens used with JWT access tokens.
 
-| Column            | Type               | Null | Notes                                    |
-|-------------------|--------------------|------|------------------------------------------|
-| `Id`              | `uniqueidentifier` | no   | **PK**                                   |
-| `UserId`          | `uniqueidentifier` | no   | **FK → `Users.Id`** (cascade)            |
-| `Token`           | `nvarchar(256)`    | no   | **Unique**                               |
-| `CreatedAt`       | `datetime2`        | no   |                                          |
-| `ExpiresAt`       | `datetime2`        | no   |                                          |
-| `RevokedAt`       | `datetime2`        | yes  | Set when the token is revoked or rotated |
+| Column            | Type               | Null | Notes                                              |
+|-------------------|--------------------|------|----------------------------------------------------|
+| `Id`              | `uniqueidentifier` | no   | **PK**                                             |
+| `UserId`          | `uniqueidentifier` | no   | **FK → `Users.Id`** (cascade)                      |
+| `TokenHash`       | `nvarchar(256)`    | no   | **Unique** — SHA-256 hash of the token, never the raw value |
+| `CreatedAt`       | `datetime2`        | no   |                                                    |
+| `ExpiresAt`       | `datetime2`        | no   |                                                    |
+| `RevokedAt`       | `datetime2`        | yes  | Set when the token is revoked or rotated           |
 
-**Indexes:** `IX_RefreshTokens_Token` (unique), `IX_RefreshTokens_UserId`
+The raw refresh token is returned to the client only at issue time; only its hash is stored, so a
+DB compromise cannot yield usable tokens. Lookups hash the presented token and match on `TokenHash`.
+
+**Indexes:** `IX_RefreshTokens_TokenHash` (unique), `IX_RefreshTokens_UserId`
 
 **Rules:** `IsActive` is computed and not stored: a token is active when it is not revoked and not expired. A token can
 be revoked only once — a second `Revoke()` throws `InvalidStateTransitionException` — and rotation revokes the current

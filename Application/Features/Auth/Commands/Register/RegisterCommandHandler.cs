@@ -34,11 +34,13 @@ public class RegisterCommandHandler(
         var accessToken = jwtTokenService.GenerateAccessToken(user);
         var refreshTokenValue = jwtTokenService.GenerateRefreshToken();
         var refreshTokenExpiry = jwtTokenService.GetRefreshTokenExpiry();
-        var refreshToken = user.IssueRefreshToken(refreshTokenValue, refreshTokenExpiry);
+        // Persist only the hash; the raw value is returned to the client below.
+        var refreshToken = user.IssueRefreshToken(jwtTokenService.HashRefreshToken(refreshTokenValue),
+            refreshTokenExpiry);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, user.Role.ToString(),
-            accessToken, refreshToken.Token, refreshToken.ExpiresAt);
+            accessToken, refreshTokenValue, refreshToken.ExpiresAt);
     }
 }

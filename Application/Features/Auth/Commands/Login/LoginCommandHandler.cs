@@ -28,12 +28,13 @@ public class LoginCommandHandler(
         var accessToken = jwtTokenService.GenerateAccessToken(user);
         var refreshTokenValue = jwtTokenService.GenerateRefreshToken();
         var refreshTokenExpiry = jwtTokenService.GetRefreshTokenExpiry();
-        var refreshToken = user.IssueRefreshToken(refreshTokenValue, refreshTokenExpiry);
+        var refreshToken = user.IssueRefreshToken(jwtTokenService.HashRefreshToken(refreshTokenValue),
+            refreshTokenExpiry);
 
         userRepository.AddRefreshToken(refreshToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, user.Role.ToString(),
-            accessToken, refreshToken.Token, refreshToken.ExpiresAt);
+            accessToken, refreshTokenValue, refreshToken.ExpiresAt);
     }
 }

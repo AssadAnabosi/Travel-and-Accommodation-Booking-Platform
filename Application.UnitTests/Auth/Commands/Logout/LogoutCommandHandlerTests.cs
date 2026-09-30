@@ -1,4 +1,5 @@
 using Application.Common.Interfaces.Persistence;
+using Application.Common.Interfaces.Services;
 using Application.Features.Auth.Commands.Logout;
 using Domain.Entities;
 using FluentAssertions;
@@ -10,16 +11,21 @@ public class LogoutCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _users = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<IJwtTokenService> _jwt = new();
 
-    private LogoutCommandHandler CreateHandler() => new(_users.Object, _uow.Object);
+    public LogoutCommandHandlerTests() =>
+        // The handler hashes the presented token before lookup; make the hash deterministic in tests.
+        _jwt.Setup(j => j.HashRefreshToken(It.IsAny<string>())).Returns((string t) => t + "-hash");
+
+    private LogoutCommandHandler CreateHandler() => new(_users.Object, _uow.Object, _jwt.Object);
 
     [Fact]
     public async Task Handle_ActiveToken_RevokesItAndSaves()
     {
         var user = User.Create("ada@tabp.dev", "hash", "Ada", "Lovelace");
-        var token = user.IssueRefreshToken("tok-1", DateTime.UtcNow.AddDays(7));
-        var other = user.IssueRefreshToken("tok-2", DateTime.UtcNow.AddDays(7));
-        _users.Setup(u => u.GetByRefreshTokenAsync("tok-1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var token = user.IssueRefreshToken("tok-1-hash", DateTime.UtcNow.AddDays(7));
+        var other = user.IssueRefreshToken("tok-2-hash", DateTime.UtcNow.AddDays(7));
+        _users.Setup(u => u.GetByRefreshTokenAsync("tok-1-hash", It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
         await CreateHandler().Handle(new LogoutCommand("tok-1"), CancellationToken.None);
 
@@ -44,8 +50,8 @@ public class LogoutCommandHandlerTests
     {
         // Logout is idempotent: a second call (or a stale cookie) must not throw or re-save.
         var user = User.Create("ada@tabp.dev", "hash", "Ada", "Lovelace");
-        user.IssueRefreshToken("tok-1", DateTime.UtcNow.AddDays(7)).Revoke();
-        _users.Setup(u => u.GetByRefreshTokenAsync("tok-1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        user.IssueRefreshToken("tok-1-hash", DateTime.UtcNow.AddDays(7)).Revoke();
+        _users.Setup(u => u.GetByRefreshTokenAsync("tok-1-hash", It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
         await CreateHandler().Handle(new LogoutCommand("tok-1"), CancellationToken.None);
 

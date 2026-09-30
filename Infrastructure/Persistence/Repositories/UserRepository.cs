@@ -34,11 +34,11 @@ public class UserRepository(AppDbContext context) : IUserRepository
     public void AddRefreshToken(RefreshToken refreshToken) => context.RefreshTokens.Add(refreshToken);
 
     // Tracked + RefreshTokens loaded so the handler can rotate the matching token in place.
-    public async Task<User?> GetByRefreshTokenAsync(string refreshToken,
+    public async Task<User?> GetByRefreshTokenAsync(string tokenHash,
         CancellationToken cancellationToken = default) =>
         await context.Users
             .Include(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken), cancellationToken);
+            .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.TokenHash == tokenHash), cancellationToken);
 
     public async Task<PaginatedList<User>> SearchAsync(UserSearchFilter filter, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default)

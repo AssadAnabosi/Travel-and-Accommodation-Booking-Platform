@@ -59,4 +59,22 @@ public class JwtTokenServiceTests
     {
         _service.GetRefreshTokenExpiry().Should().BeCloseTo(DateTime.UtcNow.AddDays(7), TimeSpan.FromMinutes(1));
     }
+
+    [Fact]
+    public void HashRefreshToken_IsDeterministic_AndDoesNotReturnTheRawToken()
+    {
+        var token = _service.GenerateRefreshToken();
+
+        var hash = _service.HashRefreshToken(token);
+
+        hash.Should().NotBeNullOrWhiteSpace();
+        hash.Should().NotBe(token); // the raw token is never what gets stored
+        hash.Should().Be(_service.HashRefreshToken(token)); // same input -> same hash, so lookups work
+    }
+
+    [Fact]
+    public void HashRefreshToken_DifferentTokens_ProduceDifferentHashes()
+    {
+        _service.HashRefreshToken("token-a").Should().NotBe(_service.HashRefreshToken("token-b"));
+    }
 }

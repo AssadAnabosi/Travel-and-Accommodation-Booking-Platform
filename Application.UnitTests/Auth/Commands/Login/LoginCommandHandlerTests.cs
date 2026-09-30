@@ -29,15 +29,17 @@ public class LoginCommandHandlerTests
         _hasher.Setup(h => h.Verify(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
         _jwt.Setup(j => j.GenerateAccessToken(user)).Returns("access-token");
         _jwt.Setup(j => j.GenerateRefreshToken()).Returns("refresh-token");
+        _jwt.Setup(j => j.HashRefreshToken("refresh-token")).Returns("refresh-token-hash");
         _jwt.Setup(j => j.GetRefreshTokenExpiry()).Returns(expiry);
 
         var result = await CreateHandler().Handle(new LoginCommand("ada@example.com", "pw"), CancellationToken.None);
 
         result.AccessToken.Should().Be("access-token");
-        result.RefreshToken.Should().Be("refresh-token");
+        result.RefreshToken.Should().Be("refresh-token"); // client receives the raw token, not the hash
         result.UserId.Should().Be(user.Id);
         result.Email.Should().Be(user.Email);
-        _users.Verify(r => r.AddRefreshToken(It.Is<Domain.Entities.RefreshToken>(t => t.Token == "refresh-token")),
+        // Only the hash is persisted.
+        _users.Verify(r => r.AddRefreshToken(It.Is<Domain.Entities.RefreshToken>(t => t.TokenHash == "refresh-token-hash")),
             Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
