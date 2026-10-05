@@ -19,6 +19,9 @@ public class RoomConfiguration : IEntityTypeConfiguration<Room>
         builder.Property(r => r.ChildCapacity).IsRequired();
         builder.Property(r => r.IsActive).IsRequired();
 
+        // Optimistic concurrency guard against double-booking
+        builder.Property(r => r.RowVersion).IsRowVersion();
+
         builder.OwnsOne(r => r.BasePrice, price =>
         {
             price.Property(m => m.Amount).HasColumnName("BasePriceAmount").HasColumnType("decimal(18,2)");
