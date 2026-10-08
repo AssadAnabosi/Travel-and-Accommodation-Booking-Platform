@@ -70,6 +70,28 @@ public class CreateBookingCommandHandlerTests
         await act.Should().ThrowAsync<NotFoundException>();
     }
 
+    // Lightweight guard for the double-booking race: when two reservations pass the availability
+    // check concurrently, the Room rowversion makes the loser's SaveChanges fail, which the DbContext
+    // translates to ConflictException (-> 409). This asserts the handler builds the booking and lets
+    // that conflict surface rather than swallowing it. The real two-parallel-requests proof belongs
+    // in an integration test (Testcontainers SQL Server) and is intentionally not covered here.
+    [Fact]
+    public async Task Handle_ConcurrentReservationLosesRace_SurfacesConflict()
+    {
+        _currentUser.Setup(c => c.UserId).Returns(Guid.NewGuid());
+        _rooms.Setup(r => r.GetByIdForBookingAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(BookableRoom());
+        _rooms.Setup(r => r.IsAvailableAsync(It.IsAny<int>(), It.IsAny<DateRange>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _uow.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ConflictException("The resource was modified by another request. Please retry."));
+
+        var act = () => CreateHandler().Handle(Command(), CancellationToken.None);
+
+        await act.Should().ThrowAsync<ConflictException>();
+        _bookings.Verify(b => b.AddAsync(It.IsAny<Booking>(), It.IsAny<CancellationToken>()), Times.Once);
+        _rooms.Verify(r => r.Update(It.IsAny<Room>()), Times.Once);
+    }
+
     [Fact]
     public async Task Handle_RoomUnavailable_ThrowsRoomNotAvailable_AndDoesNotPersist()
     {

@@ -45,7 +45,7 @@ To run the API without Docker: `dotnet run --project API` against SQL Server on 
 | CQRS / Mediator | MediatR |
 | Input Validation | FluentValidation |
 | Query composition | A small custom **Specification pattern** (`ISpecification<T>`/`BaseSpecification<T>` in Application, `SpecificationEvaluator<T>` in Infrastructure) for search/filter queries |
-| Authentication | JWT access tokens (HS256, System.IdentityModel.Tokens.Jwt) + opaque refresh tokens (rotation) |
+| Authentication | JWT access tokens (HS256, System.IdentityModel.Tokens.Jwt) + opaque refresh tokens (rotation, stored SHA-256 hashed) |
 | Authorization | Role-Based Access Control (RBAC), enforced in the Application layer |
 | Payment | Mocked payment gateway (real Stripe/PayPal integration deferred) |
 | Password hashing | BCrypt (BCrypt.Net-Next) |
@@ -180,6 +180,7 @@ No business logic lives here.
 | Discount management | Hotel Owner only, no approval gate — live immediately | Accepted risk for project scope; Owner is trusted to manage their own pricing |
 | Money currency | Kept as a per-row column (not hardcoded to a single currency) | Future-proofs multi-currency support even though no conversion logic exists yet |
 | Auth tokens | JWT access token (short-lived, stateless) + opaque random refresh token (long-lived, DB-stored, rotated each use) | Refresh tokens must be revocable (logout, theft), which requires a DB check regardless — so making them JWTs too would add complexity for no benefit. Standard OAuth2-style pairing. |
+| Refresh-token storage | Only a **SHA-256 hash** of the refresh token is persisted (`RefreshTokens.TokenHash`); the raw token is returned to the client once at issue time and never stored. Lookups hash the presented token and match on the hash | A DB compromise (leak, backup theft, SQL injection) must not hand an attacker usable refresh tokens. A plain SHA-256 is sufficient (no per-token salt) because the token is 64 bytes of cryptographic randomness — not guessable or brute-forceable like a password — and being deterministic keeps the lookup a single indexed query. `IJwtTokenService.HashRefreshToken` owns the hashing; the domain/DB only ever see the hash |
 | Hotel creation | Dual-path: Admin creates & assigns an *existing* HotelOwner (auto-approved); HotelOwner self-creates (starts Pending) | Balances self-service with admin oversight |
 | HotelOwner promotion | Admin-only, direct — no self-service "apply to be an owner" flow | Keeps role escalation strictly gated |
 | Hotel approval workflow | `Pending → Approved` or `Pending → Rejected`; a Rejected hotel can be edited and resubmitted (→ back to `Pending`) | Rejection isn't terminal; owners can fix and retry |
@@ -288,9 +289,10 @@ Approve and reject each email the owner (reject includes the reason).
 ```
 Register or Login
   → Access Token issued  (JWT, short-lived)
-  → Refresh Token issued (opaque string, long-lived, stored server-side)
+  → Refresh Token issued (opaque string, long-lived; only its SHA-256 hash is stored server-side)
 
 Client calls "refresh" with the refresh token
+  → presented token is hashed and matched against the stored hash
   → old refresh token is revoked and chained to the new one (rotation)
   → new Access Token + new Refresh Token issued
 

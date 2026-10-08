@@ -9,7 +9,7 @@ public interface IUserRepository : IRepository<User, Guid>
     Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default);
 
     // Must eager-load RefreshTokens — needed to find the matching active token and rotate it.
-    Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
+    Task<User?> GetByRefreshTokenAsync(string tokenHash, CancellationToken cancellationToken = default);
 
     // Adds a newly issued refresh token. Kept separate from Update(user) so EF inserts the new
     // token instead of mis-marking its client-generated key as an update to a non-existent row.

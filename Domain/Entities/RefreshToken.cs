@@ -8,7 +8,7 @@ public class RefreshToken : BaseEntity<Guid>
     public Guid UserId { get; private set; }
     public User User { get; private set; } = null!;
 
-    public string Token { get; private set; } = null!;
+    public string TokenHash { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public DateTime? RevokedAt { get; private set; }
@@ -19,17 +19,17 @@ public class RefreshToken : BaseEntity<Guid>
 
     protected RefreshToken() { } // EF Core
 
-    private RefreshToken(Guid userId, string token, DateTime expiresAt)
+    private RefreshToken(Guid userId, string tokenHash, DateTime expiresAt)
     {
         Id = Guid.NewGuid();
         UserId = userId;
-        Token = Guard.AgainstNullOrWhiteSpace(token, nameof(token));
+        TokenHash = Guard.AgainstNullOrWhiteSpace(tokenHash, nameof(tokenHash));
         ExpiresAt = expiresAt;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static RefreshToken Create(Guid userId, string token, DateTime expiresAt) =>
-        new(userId, token, expiresAt);
+    public static RefreshToken Create(Guid userId, string tokenHash, DateTime expiresAt) =>
+        new(userId, tokenHash, expiresAt);
 
     public void Revoke()
     {

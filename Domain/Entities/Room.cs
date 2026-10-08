@@ -16,6 +16,8 @@ public class Room : AuditableEntity<int>
     public int ChildCapacity { get; private set; }
     public Money BasePrice { get; private set; } = null!;
     public bool IsActive { get; private set; } = true; // admin can retire without deleting history
+    
+    public byte[] RowVersion { get; private set; } = null!;
 
     private readonly List<RoomAvailability> _availabilities = new();
     public IReadOnlyCollection<RoomAvailability> Availabilities => _availabilities.AsReadOnly();

@@ -61,14 +61,14 @@ public class User : AuditableEntity<Guid>
         Role = role;
         ModifiedAt = DateTime.UtcNow;
     }
-
-    public RefreshToken IssueRefreshToken(string token, DateTime expiresAt)
+    
+    public RefreshToken IssueRefreshToken(string tokenHash, DateTime expiresAt)
     {
-        var refreshToken = RefreshToken.Create(Id, token, expiresAt);
+        var refreshToken = RefreshToken.Create(Id, tokenHash, expiresAt);
         _refreshTokens.Add(refreshToken);
         return refreshToken;
     }
 
-    public RefreshToken? FindActiveRefreshToken(string token) =>
-        _refreshTokens.FirstOrDefault(rt => rt.Token == token && rt.IsActive);
+    public RefreshToken? FindActiveRefreshToken(string tokenHash) =>
+        _refreshTokens.FirstOrDefault(rt => rt.TokenHash == tokenHash && rt.IsActive);
 }

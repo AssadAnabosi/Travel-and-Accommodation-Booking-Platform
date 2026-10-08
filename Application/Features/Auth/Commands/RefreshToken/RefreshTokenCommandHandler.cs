@@ -14,18 +14,21 @@ public class RefreshTokenCommandHandler(
 {
     public async Task<AuthResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetByRefreshTokenAsync(request.Token, cancellationToken)
+        var presentedTokenHash = jwtTokenService.HashRefreshToken(request.Token);
+
+        var user = await userRepository.GetByRefreshTokenAsync(presentedTokenHash, cancellationToken)
                    ?? throw new UnauthorizedException("Invalid refresh token.");
 
-        var existingToken = user.FindActiveRefreshToken(request.Token)
+        var existingToken = user.FindActiveRefreshToken(presentedTokenHash)
                             ?? throw new UnauthorizedException("Refresh token is expired or has been revoked.");
 
         if (!user.IsActive)
             throw new UnauthorizedException("This account has been deactivated.");
 
-        // Rotation: revoke the used token and issue a fresh one.
+        // Rotation: revoke the used token and issue a fresh one (only its hash is persisted).
         var newRefreshTokenValue = jwtTokenService.GenerateRefreshToken();
-        var newRefreshToken = user.IssueRefreshToken(newRefreshTokenValue, jwtTokenService.GetRefreshTokenExpiry());
+        var newRefreshToken = user.IssueRefreshToken(jwtTokenService.HashRefreshToken(newRefreshTokenValue),
+            jwtTokenService.GetRefreshTokenExpiry());
         existingToken.Revoke();
 
         var accessToken = jwtTokenService.GenerateAccessToken(user);
@@ -36,6 +39,6 @@ public class RefreshTokenCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, user.Role.ToString(),
-            accessToken, newRefreshToken.Token, newRefreshToken.ExpiresAt);
+            accessToken, newRefreshTokenValue, newRefreshToken.ExpiresAt);
     }
 }
