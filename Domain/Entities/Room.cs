@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -22,7 +23,12 @@ public class Room : AuditableEntity<int>
     private readonly List<Discount> _discounts = new();
     public IReadOnlyCollection<Discount> Discounts => _discounts.AsReadOnly();
 
-    protected Room() { } // EF Core
+    private readonly List<RoomImage> _images = new();
+    public IReadOnlyCollection<RoomImage> Images => _images.AsReadOnly();
+
+    protected Room()
+    {
+    } // EF Core
 
     private Room(int hotelId, string number, RoomType roomType, int adultCapacity, int childCapacity, Money basePrice)
     {
@@ -37,12 +43,12 @@ public class Room : AuditableEntity<int>
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static Room Create(int hotelId, string number, RoomType roomType, int adultCapacity, int childCapacity, Money basePrice) =>
+    public static Room Create(int hotelId, string number, RoomType roomType, int adultCapacity, int childCapacity,
+        Money basePrice) =>
         new(hotelId, number, roomType, adultCapacity, childCapacity, basePrice);
 
-    public void Update(string number, int adultCapacity, int childCapacity)
+    public void Update(int adultCapacity, int childCapacity)
     {
-        Number = Guard.AgainstNullOrWhiteSpace(number, nameof(number));
         AdultCapacity = Guard.AgainstNegativeOrZero(adultCapacity, nameof(adultCapacity));
         ChildCapacity = childCapacity < 0
             ? throw new ArgumentOutOfRangeException(nameof(childCapacity))
@@ -67,5 +73,67 @@ public class Room : AuditableEntity<int>
     {
         var activeDiscount = _discounts.FirstOrDefault(d => d.IsActiveOn(onDate));
         return activeDiscount is null ? BasePrice : activeDiscount.ApplyTo(BasePrice);
+    }
+
+    public RoomAvailability Reserve(DateRange range, Guid bookingId)
+    {
+        if (!IsAvailableFor(range))
+            throw new RoomNotAvailableException(Id, range);
+
+        var availability = RoomAvailability.ForBooking(Id, range, bookingId);
+        _availabilities.Add(availability);
+        return availability;
+    }
+
+    public RoomAvailability Block(DateRange range)
+    {
+        if (!IsAvailableFor(range))
+            throw new RoomNotAvailableException(Id, range);
+
+        var availability = RoomAvailability.ForBlock(Id, range);
+        _availabilities.Add(availability);
+        return availability;
+    }
+
+    public RoomAvailability? FindAvailability(int availabilityId) =>
+        _availabilities.FirstOrDefault(a => a.Id == availabilityId);
+
+    public void Unblock(RoomAvailability availability)
+    {
+        if (availability.Status != AvailabilityStatus.Blocked)
+            throw new InvalidOperationException(
+                "Only a manually blocked range can be unblocked directly — bookings must be cancelled instead.");
+
+        _availabilities.Remove(availability);
+    }
+
+    public RoomImage AddImage(string url)
+    {
+        var nextOrder = _images.Count == 0 ? 0 : _images.Max(i => i.DisplayOrder) + 1;
+        var image = RoomImage.Create(Id, url, nextOrder);
+        _images.Add(image);
+        return image;
+    }
+
+    public void RemoveImage(int imageId)
+    {
+        var image = _images.FirstOrDefault(i => i.Id == imageId)
+                    ?? throw new InvalidOperationException($"Image {imageId} does not belong to this room.");
+        _images.Remove(image);
+    }
+
+    /// <summary>
+    /// Frees the original number for reuse by a genuinely new room, while the mangled
+    /// value keeps this row uniquely identifiable in historical Booking/Discount records.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
+    public void MarkDeleted()
+    {
+        if (!IsActive)
+            throw new InvalidOperationException("Room is already inactive.");
+
+        IsActive = false;
+        Number = $"{Number}::deleted::{Guid.NewGuid():N}";
+        ModifiedAt = DateTime.UtcNow;
     }
 }

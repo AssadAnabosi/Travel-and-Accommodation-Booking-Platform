@@ -8,8 +8,8 @@ namespace Domain.Entities;
 /// </summary>
 public class HotelVisit : BaseEntity<Guid>
 {
-    public Guid UserId { get; private set; }
-    public User User { get; private set; } = null!;
+    public Guid? UserId { get; private set; }
+    public User? User { get; private set; } = null!;
 
     public int HotelId { get; private set; }
     public Hotel Hotel { get; private set; } = null!;
@@ -20,7 +20,7 @@ public class HotelVisit : BaseEntity<Guid>
     {
     } // EF Core
 
-    private HotelVisit(Guid userId, int hotelId)
+    private HotelVisit(Guid? userId, int hotelId)
     {
         Id = Guid.NewGuid();
         UserId = userId;
@@ -28,5 +28,5 @@ public class HotelVisit : BaseEntity<Guid>
         VisitedAt = DateTime.UtcNow;
     }
 
-    public static HotelVisit Record(Guid userId, int hotelId) => new(userId, hotelId);
+    public static HotelVisit Record(Guid? userId, int hotelId) => new(userId, hotelId);
 }

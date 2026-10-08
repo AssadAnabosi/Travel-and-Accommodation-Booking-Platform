@@ -12,13 +12,18 @@ public class User : AuditableEntity<Guid>
     public UserRole Role { get; private set; }
     public bool IsActive { get; private set; } = true;
 
+    private readonly List<RefreshToken> _refreshTokens = new();
+    public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+
     private readonly List<Hotel> _ownedHotels = new();
     public IReadOnlyCollection<Hotel> OwnedHotels => _ownedHotels.AsReadOnly();
 
     private readonly List<Booking> _bookings = new();
     public IReadOnlyCollection<Booking> Bookings => _bookings.AsReadOnly();
 
-    protected User() { } // EF Core
+    protected User()
+    {
+    } // EF Core
 
     private User(Guid id, string email, string passwordHash, string firstName, string lastName, UserRole role)
     {
@@ -31,7 +36,8 @@ public class User : AuditableEntity<Guid>
         CreatedAt = DateTime.UtcNow;
     }
 
-    public static User Create(string email, string passwordHash, string firstName, string lastName, UserRole role = UserRole.Customer) =>
+    public static User Create(string email, string passwordHash, string firstName, string lastName,
+        UserRole role = UserRole.Customer) =>
         new(Guid.NewGuid(), email, passwordHash, firstName, lastName, role);
 
     public void UpdateProfile(string firstName, string lastName)
@@ -55,4 +61,14 @@ public class User : AuditableEntity<Guid>
         Role = role;
         ModifiedAt = DateTime.UtcNow;
     }
+
+    public RefreshToken IssueRefreshToken(string token, DateTime expiresAt)
+    {
+        var refreshToken = RefreshToken.Create(Id, token, expiresAt);
+        _refreshTokens.Add(refreshToken);
+        return refreshToken;
+    }
+
+    public RefreshToken? FindActiveRefreshToken(string token) =>
+        _refreshTokens.FirstOrDefault(rt => rt.Token == token && rt.IsActive);
 }
