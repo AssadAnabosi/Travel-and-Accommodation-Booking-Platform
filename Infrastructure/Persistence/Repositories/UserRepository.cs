@@ -23,8 +23,6 @@ public class UserRepository(AppDbContext context) : IUserRepository
     public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default) =>
         await context.Users.AnyAsync(u => u.Email == email, cancellationToken);
 
-    public void AddRefreshToken(RefreshToken refreshToken) => context.RefreshTokens.Add(refreshToken);
-
     // Tracked + RefreshTokens loaded so the handler can rotate the matching token in place.
     public async Task<User?> GetByRefreshTokenAsync(string refreshToken,
         CancellationToken cancellationToken = default) =>

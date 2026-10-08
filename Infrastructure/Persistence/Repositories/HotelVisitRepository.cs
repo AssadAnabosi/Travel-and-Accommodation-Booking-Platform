@@ -41,31 +41,12 @@ public class HotelVisitRepository(AppDbContext context) : IHotelVisitRepository
     }
 
     public async Task<IReadOnlyList<TrendingCity>> GetTrendingCitiesAsync(int count,
-        CancellationToken cancellationToken = default)
-    {
-        // Project the city id (via the hotel) to a scalar first so GROUP BY translates to SQL —
-        // grouping directly by the nested navigation key (Hotel.CityId + Hotel.City.Name) can't be
-        // translated. Resolve the city names in a second small query.
-        var counts = await context.HotelVisits
+        CancellationToken cancellationToken = default) =>
+        await context.HotelVisits
             .AsNoTracking()
-            .Select(v => v.Hotel.CityId)
-            .GroupBy(cityId => cityId)
-            .Select(g => new { CityId = g.Key, VisitCount = g.Count() })
-            .OrderByDescending(x => x.VisitCount)
+            .GroupBy(v => new { v.Hotel.CityId, v.Hotel.City.Name })
+            .Select(g => new TrendingCity(g.Key.CityId, g.Key.Name, g.Count()))
+            .OrderByDescending(c => c.VisitCount)
             .Take(count)
             .ToListAsync(cancellationToken);
-
-        if (counts.Count == 0)
-            return [];
-
-        var cityIds = counts.Select(x => x.CityId).ToList();
-        var namesById = await context.Cities
-            .AsNoTracking()
-            .Where(c => cityIds.Contains(c.Id))
-            .ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
-
-        return counts
-            .Select(x => new TrendingCity(x.CityId, namesById[x.CityId], x.VisitCount))
-            .ToList();
-    }
 }

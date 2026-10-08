@@ -30,7 +30,7 @@ public class LoginCommandHandler(
         var refreshTokenExpiry = jwtTokenService.GetRefreshTokenExpiry();
         var refreshToken = user.IssueRefreshToken(refreshTokenValue, refreshTokenExpiry);
 
-        userRepository.AddRefreshToken(refreshToken);
+        userRepository.Update(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, user.Role.ToString(),

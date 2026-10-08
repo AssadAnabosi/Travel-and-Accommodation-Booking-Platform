@@ -8,9 +8,7 @@ namespace Infrastructure.Persistence.Repositories;
 public class CityRepository(AppDbContext context) : ICityRepository
 {
     public async Task<City?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
-        await context.Cities
-            .Include(c => c.Hotels)
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        await context.Cities.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
     public async Task AddAsync(City entity, CancellationToken cancellationToken = default) =>
         await context.Cities.AddAsync(entity, cancellationToken);
@@ -22,7 +20,7 @@ public class CityRepository(AppDbContext context) : ICityRepository
     public async Task<PaginatedList<City>> SearchAsync(string? nameFilter, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var query = context.Cities.AsNoTracking().Include(c => c.Hotels).AsQueryable();
+        var query = context.Cities.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(nameFilter))
             query = query.Where(c => c.Name.Contains(nameFilter));
@@ -40,8 +38,7 @@ public class CityRepository(AppDbContext context) : ICityRepository
 
     public async Task<bool> NameExistsAsync(string name, int? excludeId = null,
         CancellationToken cancellationToken = default) =>
-        await context.Cities.AnyAsync(c => c.Name == name && (excludeId == null || c.Id != excludeId),
-            cancellationToken);
+        await context.Cities.AnyAsync(c => c.Name == name && (excludeId == null || c.Id != excludeId), cancellationToken);
 
     public async Task<bool> HasHotelsAsync(int cityId, CancellationToken cancellationToken = default) =>
         await context.Hotels.AnyAsync(h => h.CityId == cityId, cancellationToken);

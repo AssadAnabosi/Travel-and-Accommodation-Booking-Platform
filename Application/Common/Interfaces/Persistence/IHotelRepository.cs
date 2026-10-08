@@ -10,12 +10,6 @@ public interface IHotelRepository : IRepository<Hotel, int>
     /// </summary>
     Task<Hotel?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Tracked load with HotelAmenities eager-loaded, so clearing/adding amenity links is
-    /// change-tracked and persisted (unlike the AsNoTracking GetByIdWithDetailsAsync).
-    /// </summary>
-    Task<Hotel?> GetByIdWithAmenitiesTrackedAsync(int id, CancellationToken cancellationToken = default);
-
     Task<PaginatedList<Hotel>> SearchAsync(HotelSearchFilter filter, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
 

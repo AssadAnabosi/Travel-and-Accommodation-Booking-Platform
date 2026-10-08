@@ -6,7 +6,6 @@ using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PdfSharpCore.Fonts;
 
 namespace Infrastructure;
 
@@ -47,9 +46,6 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IPaymentGateway, MockPaymentGateway>();
         services.AddScoped<IEmailService, LoggingEmailService>();
-        // Set the PDF font resolver once, before any PDF is generated (the slim container has no
-        // OS fonts, which PdfSharpCore's default resolver requires). See FileFontResolver.
-        GlobalFontSettings.FontResolver = new FileFontResolver("AppSans");
         services.AddScoped<IPdfGenerator, PdfGenerator>();
 
         return services;
