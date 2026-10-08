@@ -1,0 +1,199 @@
+title TABP Database Schema
+
+colorMode bold
+styleMode shadow
+typeface clean
+
+// ---------- Identity ----------
+
+Users [icon: user, color: blue] {
+  Id guid pk
+  Email string unique
+  PasswordHash string
+  FirstName string
+  LastName string
+  // Customer | HotelOwner | Admin
+  Role string
+  IsActive bool
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+RefreshTokens [icon: key, color: blue] {
+  Id guid pk
+  UserId guid fk
+  Token string unique
+  CreatedAt datetime
+  ExpiresAt datetime
+  RevokedAt datetime nullable
+}
+
+// ---------- Catalog ----------
+
+Cities [icon: map-pin, color: green] {
+  Id int pk
+  // unique with Country
+  Name string
+  Country string
+  PostOffice string
+  ThumbnailUrl string nullable
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+Hotels [icon: home, color: green] {
+  Id int pk
+  CityId int fk
+  OwnerId guid fk
+  Name string
+  // 1-5
+  StarRating int
+  Description string
+  Address string
+  Latitude float
+  Longitude float
+  // Pending | Approved | Rejected
+  ApprovalStatus string
+  RejectionReason string nullable
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+HotelImages [icon: image, color: green] {
+  Id int pk
+  HotelId int fk
+  Url string
+  DisplayOrder int
+  CreatedAt datetime
+}
+
+Amenities [icon: wifi, color: green] {
+  Id int pk
+  Name string unique
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+HotelAmenities [icon: link, color: green] {
+  HotelId int pk fk
+  AmenityId int pk fk
+}
+
+// ---------- Rooms & pricing ----------
+
+Rooms [icon: box, color: orange] {
+  Id int pk
+  HotelId int fk
+  // unique with HotelId
+  Number string
+  // Standard | Budget | Deluxe | Suite | Luxury | Boutique
+  RoomType string
+  AdultCapacity int
+  ChildCapacity int
+  BasePriceAmount decimal
+  BasePriceCurrency string
+  IsActive bool
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+RoomImages [icon: image, color: orange] {
+  Id int pk
+  RoomId int fk
+  Url string
+  DisplayOrder int
+  CreatedAt datetime
+}
+
+Discounts [icon: percent, color: orange] {
+  Id int pk
+  RoomId int fk
+  Name string
+  // Percentage | FixedAmount
+  Type string
+  Value decimal
+  StartDate date
+  EndDate date
+  IsActive bool
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+RoomAvailabilities [icon: calendar, color: orange] {
+  Id int pk
+  RoomId int fk
+  StartDate date
+  EndDate date
+  // Booked | Blocked
+  Status string
+  // logical ref to Bookings.Id, no FK
+  BookingId guid nullable
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+// ---------- Bookings & engagement ----------
+
+Bookings [icon: book-open, color: purple] {
+  Id guid pk
+  UserId guid fk
+  RoomId int fk
+  ConfirmationNumber string unique
+  CheckInDate date
+  CheckOutDate date
+  Adults int
+  Children int
+  TotalPriceAmount decimal
+  TotalPriceCurrency string
+  // Pending | Confirmed | CheckedIn | CheckedOut | Cancelled
+  Status string
+  SpecialRequests string nullable
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+Reviews [icon: star, color: purple] {
+  Id int pk
+  HotelId int fk
+  UserId guid fk
+  // 1-5
+  Rating int
+  Comment string nullable
+  CreatedAt datetime
+  ModifiedAt datetime nullable
+}
+
+HotelVisits [icon: eye, color: purple] {
+  Id guid pk
+  HotelId int fk
+  UserId guid fk nullable
+  VisitedAt datetime
+}
+
+// ---------- Relationships ----------
+// ">" = many-to-one (child.FK > parent.PK)
+
+// ON DELETE CASCADE: child rows are owned by the parent
+RefreshTokens.UserId > Users.Id
+HotelImages.HotelId > Hotels.Id
+HotelAmenities.HotelId > Hotels.Id
+Rooms.HotelId > Hotels.Id
+Reviews.HotelId > Hotels.Id
+HotelVisits.HotelId > Hotels.Id
+RoomImages.RoomId > Rooms.Id
+Discounts.RoomId > Rooms.Id
+RoomAvailabilities.RoomId > Rooms.Id
+
+// ON DELETE RESTRICT: parent cannot be deleted while children exist
+Hotels.OwnerId > Users.Id
+Hotels.CityId > Cities.Id
+HotelAmenities.AmenityId > Amenities.Id
+Bookings.UserId > Users.Id
+Bookings.RoomId > Rooms.Id
+Reviews.UserId > Users.Id
+
+// ON DELETE SET NULL: anonymous analytics survive user deletion
+HotelVisits.UserId > Users.Id
+
+// Logical only, not enforced by a DB foreign key
+RoomAvailabilities.BookingId - Bookings.Id

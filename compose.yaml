@@ -1,0 +1,67 @@
+services:
+  api:
+    image: tabp-api
+    build:
+      context: .
+      dockerfile: API/Dockerfile
+    environment:
+      # Development enables Swagger UI and the auto-migrate + seed path on startup.
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sql-server,1433;Database=TABP;User Id=sa;Password=Your_strong!Passw0rd;TrustServerCertificate=True;Encrypt=False
+      - Redis__ConnectionString=redis:6379
+      # Outgoing email goes to MailHog; open http://localhost:8025 to read it.
+      - Smtp__Host=mailhog
+      - Smtp__Port=1025
+      - Smtp__Security=None
+    ports:
+      - "8080:8080"
+    depends_on:
+      sql-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailhog:
+        condition: service_started # email is best-effort, so no need to wait for a healthcheck
+
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: tabp-sql-server
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_strong!Passw0rd"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:latest
+    container_name: tabp-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: tabp-mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI
+
+volumes:
+  sql_data:
