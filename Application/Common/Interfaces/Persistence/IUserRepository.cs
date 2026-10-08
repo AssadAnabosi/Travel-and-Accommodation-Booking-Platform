@@ -11,10 +11,6 @@ public interface IUserRepository : IRepository<User, Guid>
     // Must eager-load RefreshTokens — needed to find the matching active token and rotate it.
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
 
-    // Adds a newly issued refresh token. Kept separate from Update(user) so EF inserts the new
-    // token instead of mis-marking its client-generated key as an update to a non-existent row.
-    void AddRefreshToken(RefreshToken refreshToken);
-
     Task<PaginatedList<User>> SearchAsync(UserSearchFilter filter, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
 }

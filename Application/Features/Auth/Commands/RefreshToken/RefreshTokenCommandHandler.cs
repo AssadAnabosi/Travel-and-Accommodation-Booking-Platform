@@ -30,9 +30,7 @@ public class RefreshTokenCommandHandler(
 
         var accessToken = jwtTokenService.GenerateAccessToken(user);
 
-        // The used token was loaded tracked, so its Revoke() is persisted on save; only the new
-        // token needs to be added explicitly.
-        userRepository.AddRefreshToken(newRefreshToken);
+        userRepository.Update(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new AuthResponse(user.Id, user.Email, user.FirstName, user.LastName, user.Role.ToString(),

@@ -14,15 +14,15 @@ public class UpdateHotelAmenitiesCommandHandler(
 {
     public async Task Handle(UpdateHotelAmenitiesCommand request, CancellationToken cancellationToken)
     {
-        var hotel = await hotelRepository.GetByIdWithAmenitiesTrackedAsync(request.HotelId, cancellationToken)
+        var hotel = await hotelRepository.GetByIdWithDetailsAsync(request.HotelId, cancellationToken)
                     ?? throw new NotFoundException(nameof(Hotel), request.HotelId);
 
         if (!currentUserService.IsInRole("Admin") && hotel.OwnerId != currentUserService.UserId)
             throw new ForbiddenAccessException("You can only manage amenities for your own hotel.");
 
-        // The hotel is tracked with its amenity links loaded, so SetAmenities()'s clear/add is
-        // change-tracked; SaveChanges deletes the removed links and inserts the new ones.
         hotel.SetAmenities(request.AmenityIds);
+
+        hotelRepository.Update(hotel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

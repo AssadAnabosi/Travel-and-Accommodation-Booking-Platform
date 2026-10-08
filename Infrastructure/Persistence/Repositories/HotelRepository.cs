@@ -20,12 +20,6 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
 
     public void Remove(Hotel entity) => context.Hotels.Remove(entity);
     
-    // Tracked + HotelAmenities loaded so a SetAmenities() clear/add is persisted on save.
-    public async Task<Hotel?> GetByIdWithAmenitiesTrackedAsync(int id, CancellationToken cancellationToken = default) =>
-        await context.Hotels
-            .Include(h => h.HotelAmenities)
-            .FirstOrDefaultAsync(h => h.Id == id, cancellationToken);
-
     public async Task<Hotel?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default) =>
         await context.Hotels
             .AsNoTracking()
@@ -126,11 +120,8 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
     {
         var query = context.Hotels
             .AsNoTracking()
-            .AsSplitQuery()
             .Where(h => h.OwnerId == ownerId)
             .Include(h => h.City)
-            .Include(h => h.Owner)
-            .Include(h => h.Rooms)
             .OrderBy(h => h.Name);
 
         return await PaginateAsync(query, pageNumber, pageSize, cancellationToken);
@@ -141,11 +132,9 @@ public class HotelRepository(AppDbContext context, IDateTimeProvider dateTimePro
     {
         var query = context.Hotels
             .AsNoTracking()
-            .AsSplitQuery()
             .Where(h => h.ApprovalStatus == HotelApprovalStatus.Pending)
             .Include(h => h.City)
             .Include(h => h.Owner)
-            .Include(h => h.Rooms)
             .OrderBy(h => h.CreatedAt);
 
         return await PaginateAsync(query, pageNumber, pageSize, cancellationToken);

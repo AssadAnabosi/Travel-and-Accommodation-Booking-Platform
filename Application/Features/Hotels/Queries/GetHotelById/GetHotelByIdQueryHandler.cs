@@ -12,7 +12,7 @@ public class GetHotelByIdQueryHandler(IHotelRepository hotelRepository, ICurrent
 {
     public async Task<HotelDto> Handle(GetHotelByIdQuery request, CancellationToken cancellationToken)
     {
-        var hotel = await hotelRepository.GetByIdWithDetailsAsync(request.HotelId, cancellationToken)
+        var hotel = await hotelRepository.GetByIdAsync(request.HotelId, cancellationToken)
                     ?? throw new NotFoundException(nameof(Hotel), request.HotelId);
 
         if (!currentUserService.IsInRole("Admin") && hotel.OwnerId != currentUserService.UserId)
